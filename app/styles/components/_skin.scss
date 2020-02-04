@@ -1,0 +1,30 @@
+.skin {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  padding: 1rem;
+  transition: background .3s ease;
+
+  p, input {
+    margin: 0;
+  }
+
+  > :first-child {
+    margin-right: 1rem;
+  }
+
+  &:hover {
+    background: #f0f0f0;
+  }
+}
+
+.skin__subtext {
+  color: #999;
+}
+
+.skin-completed {
+  p, .skin-subtext {
+    color: $light-color;
+    text-decoration: line-through;
+  }
+}

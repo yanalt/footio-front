@@ -1,0 +1,10 @@
+node_modules/
+server/config/config.json
+sec.json
+app/api/ip.jsx
+app/components/ip.jsx
+public/img/
+public/bundle.js
+ip.json
+server/config/firebaseConfig.js
+privateKeySomething.json
