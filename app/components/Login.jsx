@@ -2,7 +2,7 @@ import currentIP from 'ip';
 import currentPort from '../port';
 import React from 'react';
 import axios from 'axios';
-import Ad from 'Ad';
+import '../styles/styles.css';
 //import 'whatwg-fetch';
 
 export var Login = React.createClass({

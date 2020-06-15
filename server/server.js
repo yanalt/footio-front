@@ -48,7 +48,13 @@ app.use(function (req, res, next) {
 
 admin.initializeApp({
     credential: admin.credential.applicationDefault(),
-    databaseURL: 'https://mundmobile-ec6a3.firebaseio.com'
+    apiKey: sec.apiKey,
+    authDomain: sec.authDomain,
+    databaseURL: sec.databaseURL,
+    projectId: sec.projectId,
+    storageBucket: sec.storageBucket,
+    messagingSenderId: sec.messagingSenderId,
+    appId: sec.appId
   });
 
 app.post('/forgot', (req, res) => {
@@ -115,7 +121,7 @@ async function verify(idToken) {
     admin.auth().verifyIdToken(idToken)
   .then(function(decodedToken) {
     let uid = decodedToken.uid;
-    console.log(uid);
+    // console.log(uid);
   }).catch(function(e) {
     console.log("KEKW");
     console.log(e);
@@ -182,8 +188,10 @@ app.get('/skins', authenticate, (req, res) => {
     Skin
         .find({})
         .then((skins) => {
+            console.log('skins success');
             res.send({skins}); //we send the skins inside an object so we can send it with other stuff in the future
         }, (e) => {
+            console.log(e);
             res
                 .status(400)
                 .send(e);
@@ -258,6 +266,7 @@ app.patch('/skins/:id', authenticate, (req, res) => { //updates a skin, needs lo
     var body = _.pick(req.body, ['name', 'completed']); //lodash takes the 'name' and 'completed' properties sent from the request
 
     if (!ObjectID.isValid(id)) {
+        console.log('Invalid!');
         return res
             .status(404)
             .send();
@@ -420,6 +429,7 @@ app.post('/users/skintoken', (req, res) => { //we don't use authenticate since w
                 });
         })
         .catch((e) => {
+            console.log(e);
             res
                 .status(400)
                 .send();
@@ -708,14 +718,14 @@ app.post('/users/lasttime', authenticate, (req, res) => {
         .then((user) => {
             let d = new Date()
             if (d.getTime() - user.lastTime > 300000 || user.lastTime == 0) {
-                let currentCredit = user.creditBalance;
-                currentCredit += 34;
+                // let currentCredit = user.creditBalance;
+                // currentCredit += 34;
                 User.findOneAndUpdate({
                     _id: user._id
                 }, {
                     $set: {
                         lastTime: d.getTime(),
-                        creditBalance: currentCredit
+                        // creditBalance: currentCredit
                     }
                 }).catch((e) => {
                     console.log(e);
@@ -737,8 +747,8 @@ app.post('/users/androidlogin', (req, res) => { //we don't use authenticate sinc
     console.log("New Android log in!");
     // console.log(req);
     // console.log(req.body);
-    console.log(req.body.email);
-    console.log(req.body.refreshToken);
+    // console.log(req.body.email);
+    // console.log(req.body.refreshToken);
     
     verify(req.body.refreshToken).then(() => {
         //only after verifying the google token, we start the login process

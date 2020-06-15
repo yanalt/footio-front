@@ -1,5 +1,6 @@
 var React = require('react');
 var Skin = require('Skin');
+import '../styles/styles.css';
 
 var SkinList = React.createClass({
   render: function () {

@@ -1,4 +1,5 @@
 var React = require('react');
+import '../styles/styles.css';
 
 var AddSkin = React.createClass({
   handleSubmit: function (e) {

@@ -12,10 +12,10 @@ import Rooms from 'Rooms';
 
 
 // Load foundation
-$(document).foundation();
+// $(document).foundation();
 
 // App css
-require('style!css!sass!applicationStyles');
+// require('style!css!sass!applicationStyles');
 
 ReactDOM.render(
   <Router history={hashHistory}>

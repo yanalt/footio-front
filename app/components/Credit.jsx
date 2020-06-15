@@ -1,5 +1,6 @@
 import currentIP from 'ip';
 import currentPort from '../port';
+import '../styles/styles.css';
 var React = require('react');
 var moment = require('moment');
 const axios = require('axios');

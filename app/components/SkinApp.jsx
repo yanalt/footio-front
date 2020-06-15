@@ -3,15 +3,16 @@ var uuid = require('node-uuid');
 const axios = require('axios');
 import currentIP from 'ip';
 import currentPort from '../port';
-import AdBlockDetect from 'react-ad-block-detect';
+import '../styles/styles.css';
 
 
 var SkinList = require('SkinList');
-var Ad = require('Ad');
 var AddSkin = require('AddSkin');
 var SkinSearch = require('SkinSearch');
 var SkinAPI = require('SkinAPI');
 var Logout = require('Logout');
+
+
 
 var SkinApp = React.createClass({
   getInitialState: function () {
@@ -23,7 +24,8 @@ var SkinApp = React.createClass({
       Ownedskins: [],
       creditBalance: 0,
       currentSkin: null,
-      skinToken: ''
+      skinToken: '',
+      // queryDict: ''
     };
   },
   componentDidUpdate: function () {
@@ -33,46 +35,60 @@ var SkinApp = React.createClass({
     SkinAPI.setSkins(this.state.skins);
   },
   componentDidMount: function () {
+    // let q;
+    // location.search.substr(1).split("&").forEach(function(item) {q[item.split("=")[0]] = item.split("=")[1]});
+    // this.setState({queryDict:});
+    // window.alert(this.props.location.query.a);
+    localStorage.setItem('x-auth',this.props.location.query.a);
     axios({
       method: 'post',
       headers: {
-        'x-auth': localStorage.getItem('x-auth')
+        'x-auth': this.props.location.query.a
       },
       url: window.location.protocol+'//'+currentIP+':'+currentPort+'/users/skintoken'
     }).then(response=>{
       this.setState({skinToken:response.headers.skin});
+      // window.alert(response.headers.skin);
     }).catch((e) => {
       console.log('failed response from skins');
-      console.log(e);
+      window.alert(e);
     });
     SkinAPI
       .getCreditBalance()
       .then(creditBalance => {
         this.setState({creditBalance});
         if (creditBalance == null || creditBalance == undefined) {
-          window.location.hash = '#/';
+          // window.location.hash = '#/';
         }
       })
       .catch((e) => {
-        console.log(e);
-        window.location.hash = '#/';
+        window.alert(e);
       });
     SkinAPI
-      .updateLastTime().catch((e)=>{ console.log(e)});
+      .updateLastTime().catch((e)=>{ window.alert(e)});
     SkinAPI
       .getSkins()
       .then(skins => {
         this.setState({skins});
+      })
+      .catch((e) => {
+        window.alert(e);
       });
     SkinAPI
       .getOwnedSkins()
       .then(Ownedskins => {
         this.setState({Ownedskins});
+      })
+      .catch((e) => {
+        window.alert(e);
       });
     SkinAPI
       .getCurrentSkin()
       .then(currentSkin => {
         this.setState({currentSkin});
+      })
+      .catch((e) => {
+        window.alert(e);
       });
   },
   handleAddSkin: function (name) {
@@ -113,17 +129,26 @@ var SkinApp = React.createClass({
         .then(skins => {
           this.setState({skins});
           SkinAPI.setSkins(skins);
+        })
+        .catch((e) => {
+          window.alert(e);
         });
       SkinAPI
         .getCreditBalance()
         .then(creditBalance => {
           this.setState({creditBalance});
+        })
+        .catch((e) => {
+          window.alert(e);
         });
       SkinAPI
         .getCurrentSkin()
         .then(currentSkin => {
           this.setState({currentSkin});
         })
+        .catch((e) => {
+          window.alert(e);
+        });
       window
         .location
         .reload();
@@ -171,7 +196,7 @@ var SkinApp = React.createClass({
           .reload();
       })
       .catch((e) => {
-        console.log(e);
+        window.alert(e);
       });
   },
   OwnedhandleSearch: function (showCompleted, searchText) { //make this
@@ -181,10 +206,13 @@ var SkinApp = React.createClass({
     });
   },
   render: function () {
-
-    if (!localStorage.getItem('x-auth')) {
-      window.location.hash = '#/login';
-    } else {
+    // var queryDict = {}
+    // location.search.substr(1).split("&").forEach(function(item) {queryDict[item.split("=")[0]] = item.split("=")[1]});
+    // if (!localStorage.getItem('x-auth')&&(queryDict[0]==undefined||queryDict[0]=="undefined"||queryDict[0]==null)) {
+    //   // window.location.hash = '#/login';
+    //   window.alert(queryDict[0]); //location.search doesn't appear
+    //                               //location appears but you can't do anything with the get part
+    // } else {
       var {
         skins,
         showCompleted,
@@ -209,109 +237,74 @@ var SkinApp = React.createClass({
           }
         return skin;
       });
-
-      // console.log(ActualOwnedSkins);
+      // if(ActualSkins[0])
+      //   window.alert(ActualSkins[0].name);
 
       var filteredSkins = SkinAPI.filterSkins(ActualSkins, showCompleted, searchText);
       var OwnedfilteredSkins = SkinAPI.filterSkins(ActualOwnedSkins, showCompleted, searchText); //make this
 
       //console.log(currentSkin);
       let inputStyle={}, buttonTags="button expanded";
-      if(window.orientation!='undefined'&&window.orientation!=undefined){
-          inputStyle={fontSize: '500%', height:100};
-          buttonTags="button large expanded";
-      }
+      // if(window.orientation!='undefined'&&window.orientation!=undefined){
+      //     inputStyle={fontSize: '500%', height:100};
+      //     buttonTags="button large expanded";
+      // }
       return (
         <div>
-          <div className="row">
-            <div className="column">
-              <Logout/>
-            </div>
-            <div className="column">
-              <AdBlockDetect>
-                <div className="column small-centered medium-centered large-centered small-11 medium-6 large-5">
-                  <p>I only use one ad per page. Consider whitelisting me on your Adblocker. If the ads are intrusive please contact me and feel free to remove me from the whitelist.</p>
-                </div>
-              </AdBlockDetect>
-            </div>
-          </div>
-          <div className="row">
-            <div className="column small-centered medium-centered large-centered small-11 medium-6 large-5">
-            <br/><br/>
+          <div>
+            <div style={{float: 'left', width: '40%'}}>
+            <br/>
                 <input ref="nickName" type="text" placeholder="Nickname"/>
                 <button className={buttonTags} id="start" onClick={this.handleStart}>START GAME ⚽</button>
-              
+
+                <button onClick={()=>{
+                  location.reload();
+                }}>Reload</button>
+          
             </div>
-          </div>
-          <h2 className="page-title">Owned Skins</h2>
-          <div className="row">
-            <div className="column small-centered medium-centered large-centered small-11 medium-6 large-5">
-              <button
-                className={buttonTags}
-                id="hide"
-                onClick={() => {
-                document
-                  .getElementById('owned')
-                  .style
-                  .display = "none";
-                document
-                  .getElementById('unhide')
-                  .style
-                  .display = "inline";
-                document
-                  .getElementById('hide')
-                  .style
-                  .display = "none";
-              }}>Hide owned skins</button>
-              <button
-                className={buttonTags}
-                id="unhide"
-                style={{
-                display: "none"
-              }}
-                onClick={() => {
-                document
-                  .getElementById('owned')
-                  .style
-                  .display = "block";
-                document
-                  .getElementById('unhide')
-                  .style
-                  .display = "none";
-                document
-                  .getElementById('hide')
-                  .style
-                  .display = "inline";
-              }}>Unhide owned skins</button>
-            </div>
-          </div>
-          <div className="row" id="owned">
-            <div className="column small-centered small-11 medium-6 large-5">
-              <div className="container">
-                <SkinSearch onSearch={this.OwnedhandleSearch}/>
-                <SkinList skins={OwnedfilteredSkins} current={currentSkin} onConfirm={this.OwnedhandleConfirm}/>
-              </div>
-            </div>
-          </div>
-          <h2 className="page-title">Skin Shop</h2>
-          <div
-            className="column small-centered small-11 medium-6 large-5"
-            id="creditBalanceTitle">
-            Credit: {creditBalance}
-            <button className={buttonTags} id="credit" onClick={this.handleCredit}>Get more credit!</button>
           </div>
 
-          <div className="row">
-            <div className="column small-centered small-11 medium-6 large-5">
-              <div className="container">
-                <SkinSearch onSearch={this.handleSearch}/>
-                <SkinList skins={filteredSkins} onConfirm={this.handleConfirm}/>
+
+          <div>
+            
+            <SkinSearch onSearch={this.handleSearch}/>
+            <div  style={{float: 'left', width: '100%',textAlign:'center'}}
+              id="creditBalanceTitle">
+              <h2>Coins: {creditBalance}</h2>
+            </div>
+            <div style={{float: 'left', width: '40%'}}>
+                
+              <h2 className="page-title">Unlocked Skins</h2>
+              <div className="row" id="owned">
+                <div className="column small-centered">
+                  <div className="container">
+                    {/* <SkinSearch onSearch={this.OwnedhandleSearch}/> */}
+                    <SkinList skins={OwnedfilteredSkins} current={currentSkin} onConfirm={this.OwnedhandleConfirm}/>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <div style={{float: 'left', width: '40%'}}>
+              <h2 className="page-title">Locked Skins</h2>
+
+              <div className="row">
+                <div className="column small-centered small-11 medium-6 large-5">
+                  <div className="container">
+                    {/* <SkinSearch onSearch={this.handleSearch}/> */}
+                    <SkinList skins={filteredSkins} onConfirm={this.handleConfirm}/>
+                  </div>
+                </div>
+              </div>
+            
+            </div>
+
           </div>
+
+
         </div>
-      )
-    }
+      );
+    // }
   }
 });
 

@@ -1,4 +1,5 @@
 var React = require('react');
+import '../styles/styles.css';
 
 var SkinSearch = React.createClass({
   handleSearch: function () {
@@ -10,7 +11,7 @@ var SkinSearch = React.createClass({
   render: function () {
     let inputStyle={}, buttonTags="button expanded";
     if(window.orientation!='undefined'&&window.orientation!=undefined){
-        inputStyle={fontSize: '500%', height:100};
+        inputStyle={fontSize: '200%', height:'10%', width: '100%',textAlign:'center'};
         buttonTags="button large expanded";
     }
     return (

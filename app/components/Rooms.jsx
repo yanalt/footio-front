@@ -2,7 +2,7 @@ var React = require('react');
 var uuid = require('node-uuid');
 const axios = require('axios');
 import currentIP from 'ip';
-import Ad from 'Ad';
+import '../styles/styles.css';
 
 // var SkinList = require('SkinList');
 // var AddSkin = require('AddSkin');
@@ -58,11 +58,9 @@ var Rooms = React.createClass({
       return (
         <div>
           <div>
-            <h1 className="page-title">Auto assigning...</h1>
-            <h3 className="page-title">Press 'w' to pass/kick the ball</h3>
-            <h3 className="page-title">Press 'e' or left click to sprint without the ball</h3>
-            <h3 className="page-title">For phone and tablet users: use the left circle to navigate, middle circle to sprint, and right circle to kick</h3>
-            <h3 className="page-title">Holding the kick button increases the strength of the shot</h3>
+              <h1 className="page-title">Auto assigning...</h1>
+              <h3 className="page-title">Use 🕹 to navigate, 🏃 to sprint, and ⚽ to kick</h3>
+              <h3 className="page-title">Holding ⚽ increases the strength of the shot</h3>
             {redirect() }
           </div>
           <div className="column small-centered small-11 medium-6 large-5">
@@ -80,10 +78,8 @@ var Rooms = React.createClass({
             <Logout/>
             <div>
               <h1 className="page-title">Auto assigning...</h1>
-              <h3 className="page-title">Press 'W' or right click to pass/kick the ball</h3>
-              <h3 className="page-title">Press 'E' or left click to sprint without the ball</h3>
-              <h3 className="page-title">For phone and tablet users: use the left circle to navigate, middle circle to sprint, and right circle to kick</h3>
-              <h3 className="page-title">Holding the kick button increases the strength of the shot</h3>
+              <h3 className="page-title">Use 🕹 to navigate, 🏃 to sprint, and ⚽ to kick</h3>
+              <h3 className="page-title">Holding ⚽ increases the strength of the shot</h3>
             {redirect() }
             </div>
             <div className="column small-centered small-11 medium-6 large-5">
