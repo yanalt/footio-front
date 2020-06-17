@@ -4,7 +4,6 @@ import '../styles/styles.css';
 var React = require('react');
 var moment = require('moment');
 const axios = require('axios');
-var Logout = require('Logout');
 
 var SkinAPI = require('SkinAPI');
 
@@ -52,7 +51,6 @@ var Credit = React.createClass({
       }
       return (
         <div>
-          <Logout/>
           <h2 className="page-title">Get credit coins!</h2>
           <div className="column small-centered small-11 medium-6 large-5">Credit: {this.state.creditBalance}</div>
           <div className="column small-centered small-11 medium-6 large-5">By clicking the following buttons, you agree to the <a href="/EULA.html">terms of service of mund.io</a></div>

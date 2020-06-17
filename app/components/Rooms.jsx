@@ -8,7 +8,6 @@ import '../styles/styles.css';
 // var AddSkin = require('AddSkin');
 // var SkinSearch = require('SkinSearch');
 var SkinAPI = require('SkinAPI');
-var Logout = require('Logout');
 
 // let server.js read the capacity json, and send here via axios
 
@@ -75,7 +74,6 @@ var Rooms = React.createClass({
 
         return (
           <div>
-            <Logout/>
             <div>
               <h1 className="page-title">Auto assigning...</h1>
               <h3 className="page-title">Use 🕹 to navigate, 🏃 to sprint, and ⚽ to kick</h3>

@@ -9,7 +9,7 @@ const fs = require('fs');
 const requestCountry = require('request-country');
 
 const _ = require('lodash');
-const paypal = require('paypal-rest-sdk');
+// const paypal = require('paypal-rest-sdk');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
@@ -485,6 +485,7 @@ app.post('/users/skinconfirm', (req, res) => { //we don't use authenticate since
                     Skin
                         .findById(user.currentSkin)
                         .then((thisskin) => {
+                            console.log(thisskin);
                             res.send({userId: user._id, skinsprite: thisskin.sprite}); //we send the skin name inside an object so we can send it with other stuff in the future
                         }, (e) => {
                             console.log(e);
@@ -731,7 +732,7 @@ app.post('/users/lasttime', authenticate, (req, res) => {
                     console.log(e);
                     res
                         .status(400)
-                        .send();
+                        .send(e);
                 });
             }
         })
@@ -739,7 +740,27 @@ app.post('/users/lasttime', authenticate, (req, res) => {
             console.log(e);
             res
                 .status(404)
-                .send();
+                .send(e);
+        });
+});
+
+app.post('/users/reward100', authenticate, (req, res) => {
+    User
+        .findByToken(req.header('x-auth'))
+        .then((user) => {
+            user.creditBalance+=100;
+            console.log(user.creditBalance);
+            user.save().then(()=>{
+                res.send('Success from reward100');
+            }).catch((e)=>{
+                console.log(e);
+            });
+        })
+        .catch((e) => {
+            console.log(e);
+            res
+                .status(404)
+                .send(e);
         });
 });
 
@@ -897,272 +918,272 @@ app.delete('/users/me/token', authenticate, (req, res) => {
         });
 });
 
-paypal.configure({
-    'mode': 'live', //sandbox or live
-    'client_id': sec.client_id,
-    'client_secret': sec.client_secret
-});
+// paypal.configure({
+//     'mode': 'live', //sandbox or live
+//     'client_id': sec.client_id,
+//     'client_secret': sec.client_secret
+// });
 
-app.post('/pay', (req, res) => {
-    console.log(req.header('x-auth'));
-    User
-        .findByToken(req.header('x-auth'))
-        .then((user) => {
-            console.log(req.header('x-auth'));
-            let sum = 0,
-                product = "";
-            switch (req.body.type) {
-                case 'credit5':
-                    sum = 5;
-                    product = "1000 credit points";
-                    break;
-                case 'credit10':
-                    sum = 10;
-                    product = "2400 credit points";
-                    break;
-                case 'credit20':
-                    sum = 20;
-                    product = "6000 credit points";
-                    break;
-                default:
-                    console.log('error');
-                    throw new Error("No such payment option");
-            }
+// app.post('/pay', (req, res) => {
+//     console.log(req.header('x-auth'));
+//     User
+//         .findByToken(req.header('x-auth'))
+//         .then((user) => {
+//             console.log(req.header('x-auth'));
+//             let sum = 0,
+//                 product = "";
+//             switch (req.body.type) {
+//                 case 'credit5':
+//                     sum = 5;
+//                     product = "1000 credit points";
+//                     break;
+//                 case 'credit10':
+//                     sum = 10;
+//                     product = "2400 credit points";
+//                     break;
+//                 case 'credit20':
+//                     sum = 20;
+//                     product = "6000 credit points";
+//                     break;
+//                 default:
+//                     console.log('error');
+//                     throw new Error("No such payment option");
+//             }
 
-            const create_payment_json = {
-                "intent": "sale",
-                "payer": {
-                    //"auth": req.header('x-auth'),
-                    "payment_method": "paypal"
-                },
-                "redirect_urls": {
-                    "return_url": "https://www.mund.io/success" + sum,
-                    "cancel_url": "https://www.mund.io/cancel"
-                },
-                "transactions": [
-                    {
-                        "item_list": {
-                            "items": [
-                                {
-                                    "name": product + " for the user with the following email: " + user.email,
-                                    "sku": "001",
-                                    "price": sum,
-                                    "currency": "USD",
-                                    "quantity": 1
-                                }
-                            ]
-                        },
-                        "amount": {
-                            "currency": "USD",
-                            "total": sum
-                        },
-                        "description": user._id
-                    }
-                ]
-            };
-            paypal
-                .payment
-                .create(create_payment_json, function (error, payment) {
-                    if (error) {
-                        console.log("create");
-                        console.log(error);
-                        throw error;
-                    } else {
-                        for (let i = 0; i < payment.links.length; i++) {
-                            if (payment.links[i].rel === 'approval_url') {
-                                res.send({link: payment.links[i].href});
-                            }
-                        }
-                    }
-                });
-        })
-        .catch((e) => {
-            console.log("catch");
-            console.log(e);
-            return e;
-        })
+//             const create_payment_json = {
+//                 "intent": "sale",
+//                 "payer": {
+//                     //"auth": req.header('x-auth'),
+//                     "payment_method": "paypal"
+//                 },
+//                 "redirect_urls": {
+//                     "return_url": "https://www.mund.io/success" + sum,
+//                     "cancel_url": "https://www.mund.io/cancel"
+//                 },
+//                 "transactions": [
+//                     {
+//                         "item_list": {
+//                             "items": [
+//                                 {
+//                                     "name": product + " for the user with the following email: " + user.email,
+//                                     "sku": "001",
+//                                     "price": sum,
+//                                     "currency": "USD",
+//                                     "quantity": 1
+//                                 }
+//                             ]
+//                         },
+//                         "amount": {
+//                             "currency": "USD",
+//                             "total": sum
+//                         },
+//                         "description": user._id
+//                     }
+//                 ]
+//             };
+//             paypal
+//                 .payment
+//                 .create(create_payment_json, function (error, payment) {
+//                     if (error) {
+//                         console.log("create");
+//                         console.log(error);
+//                         throw error;
+//                     } else {
+//                         for (let i = 0; i < payment.links.length; i++) {
+//                             if (payment.links[i].rel === 'approval_url') {
+//                                 res.send({link: payment.links[i].href});
+//                             }
+//                         }
+//                     }
+//                 });
+//         })
+//         .catch((e) => {
+//             console.log("catch");
+//             console.log(e);
+//             return e;
+//         })
 
-});
+// });
 
-//find a way to unify the following functions....
+// //find a way to unify the following functions....
 
-app.get('/success5', (req, res) => {
-    const payerId = req.query.PayerID;
-    const paymentId = req.query.paymentId;
-    const execute_payment_json = {
-        "payer_id": payerId,
-        "transactions": [
-            {
-                "amount": {
-                    "currency": "USD",
-                    "total": "5.00"
-                }
-            }
-        ]
-    };
+// app.get('/success5', (req, res) => {
+//     const payerId = req.query.PayerID;
+//     const paymentId = req.query.paymentId;
+//     const execute_payment_json = {
+//         "payer_id": payerId,
+//         "transactions": [
+//             {
+//                 "amount": {
+//                     "currency": "USD",
+//                     "total": "5.00"
+//                 }
+//             }
+//         ]
+//     };
 
-    paypal
-        .payment
-        .execute(paymentId, execute_payment_json, function (error, payment) {
-            if (error) {
-                console.log(error.response);
-                throw error;
-            } else {
-                //console.log(JSON.stringify(payment));
-                User
-                    .findById(payment.transactions[0].description)
-                    .then((user) => {
-                        User.findOneAndUpdate({
-                            _id: user._id
-                        }, {
-                            $set: {
-                                creditBalance: user.creditBalance + 1000
-                            }
-                        }).then((user) => {
-                            if (!user) {
-                                return res
-                                    .status(404)
-                                    .send();
-                            }
-                            res.send({user});
-                        }).catch((e) => {
-                            res
-                                .status(400)
-                                .send();
-                        });
-                    })
-                    .then(() => {
-                        res.redirect('https://www.mund.io/#/skins');
-                    })
-                    .catch((e) => {
-                        console.log(e);
-                        res
-                            .status(404)
-                            .send();
-                    });
-            }
-        });
-});
+//     paypal
+//         .payment
+//         .execute(paymentId, execute_payment_json, function (error, payment) {
+//             if (error) {
+//                 console.log(error.response);
+//                 throw error;
+//             } else {
+//                 //console.log(JSON.stringify(payment));
+//                 User
+//                     .findById(payment.transactions[0].description)
+//                     .then((user) => {
+//                         User.findOneAndUpdate({
+//                             _id: user._id
+//                         }, {
+//                             $set: {
+//                                 creditBalance: user.creditBalance + 1000
+//                             }
+//                         }).then((user) => {
+//                             if (!user) {
+//                                 return res
+//                                     .status(404)
+//                                     .send();
+//                             }
+//                             res.send({user});
+//                         }).catch((e) => {
+//                             res
+//                                 .status(400)
+//                                 .send();
+//                         });
+//                     })
+//                     .then(() => {
+//                         res.redirect('https://www.mund.io/#/skins');
+//                     })
+//                     .catch((e) => {
+//                         console.log(e);
+//                         res
+//                             .status(404)
+//                             .send();
+//                     });
+//             }
+//         });
+// });
 
-app.get('/success10', (req, res) => {
-    const payerId = req.query.PayerID;
-    const paymentId = req.query.paymentId;
+// app.get('/success10', (req, res) => {
+//     const payerId = req.query.PayerID;
+//     const paymentId = req.query.paymentId;
 
-    const execute_payment_json = {
-        "payer_id": payerId,
-        "transactions": [
-            {
-                "amount": {
-                    "currency": "USD",
-                    "total": "10.00"
-                }
-            }
-        ]
-    };
+//     const execute_payment_json = {
+//         "payer_id": payerId,
+//         "transactions": [
+//             {
+//                 "amount": {
+//                     "currency": "USD",
+//                     "total": "10.00"
+//                 }
+//             }
+//         ]
+//     };
 
-    paypal
-        .payment
-        .execute(paymentId, execute_payment_json, function (error, payment) {
-            if (error) {
-                console.log(error.response);
-                throw error;
-            } else {
-                //console.log(JSON.stringify(payment));
-                User
-                    .findById(payment.transactions[0].description)
-                    .then((user) => {
-                        User.findOneAndUpdate({
-                            _id: user._id
-                        }, {
-                            $set: {
-                                creditBalance: user.creditBalance + 2400
-                            }
-                        }).then((user) => {
-                            if (!user) {
-                                return res
-                                    .status(404)
-                                    .send();
-                            }
-                            res.send({user});
-                        }).catch((e) => {
-                            res
-                                .status(400)
-                                .send();
-                        });
-                    })
-                    .then(() => {
-                        res.redirect('https://www.mund.io/#/skins');
-                    })
-                    .catch((e) => {
-                        console.log(e);
-                        res
-                            .status(404)
-                            .send();
-                    });
-            }
-        });
-});
+//     paypal
+//         .payment
+//         .execute(paymentId, execute_payment_json, function (error, payment) {
+//             if (error) {
+//                 console.log(error.response);
+//                 throw error;
+//             } else {
+//                 //console.log(JSON.stringify(payment));
+//                 User
+//                     .findById(payment.transactions[0].description)
+//                     .then((user) => {
+//                         User.findOneAndUpdate({
+//                             _id: user._id
+//                         }, {
+//                             $set: {
+//                                 creditBalance: user.creditBalance + 2400
+//                             }
+//                         }).then((user) => {
+//                             if (!user) {
+//                                 return res
+//                                     .status(404)
+//                                     .send();
+//                             }
+//                             res.send({user});
+//                         }).catch((e) => {
+//                             res
+//                                 .status(400)
+//                                 .send();
+//                         });
+//                     })
+//                     .then(() => {
+//                         res.redirect('https://www.mund.io/#/skins');
+//                     })
+//                     .catch((e) => {
+//                         console.log(e);
+//                         res
+//                             .status(404)
+//                             .send();
+//                     });
+//             }
+//         });
+// });
 
-app.get('/success20', (req, res) => {
-    const payerId = req.query.PayerID;
-    const paymentId = req.query.paymentId;
+// app.get('/success20', (req, res) => {
+//     const payerId = req.query.PayerID;
+//     const paymentId = req.query.paymentId;
 
-    const execute_payment_json = {
-        "payer_id": payerId,
-        "transactions": [
-            {
-                "amount": {
-                    "currency": "USD",
-                    "total": "20.00"
-                }
-            }
-        ]
-    };
+//     const execute_payment_json = {
+//         "payer_id": payerId,
+//         "transactions": [
+//             {
+//                 "amount": {
+//                     "currency": "USD",
+//                     "total": "20.00"
+//                 }
+//             }
+//         ]
+//     };
 
-    paypal
-        .payment
-        .execute(paymentId, execute_payment_json, function (error, payment) {
-            if (error) {
-                console.log(error.response);
-                throw error;
-            } else {
-                //console.log(JSON.stringify(payment));
-                User
-                    .findById(payment.transactions[0].description)
-                    .then((user) => {
-                        User.findOneAndUpdate({
-                            _id: user._id
-                        }, {
-                            $set: {
-                                creditBalance: user.creditBalance + 3000
-                            }
-                        }).then((user) => {
-                            if (!user) {
-                                return res
-                                    .status(404)
-                                    .send();
-                            }
-                            res.send({user});
-                        }).catch((e) => {
-                            res
-                                .status(400)
-                                .send();
-                        });
-                    })
-                    .then(() => {
-                        res.redirect('https://www.mund.io/#/skins');
-                    })
-                    .catch((e) => {
-                        console.log(e);
-                        res
-                            .status(404)
-                            .send();
-                    });
-            }
-        });
-});
+//     paypal
+//         .payment
+//         .execute(paymentId, execute_payment_json, function (error, payment) {
+//             if (error) {
+//                 console.log(error.response);
+//                 throw error;
+//             } else {
+//                 //console.log(JSON.stringify(payment));
+//                 User
+//                     .findById(payment.transactions[0].description)
+//                     .then((user) => {
+//                         User.findOneAndUpdate({
+//                             _id: user._id
+//                         }, {
+//                             $set: {
+//                                 creditBalance: user.creditBalance + 3000
+//                             }
+//                         }).then((user) => {
+//                             if (!user) {
+//                                 return res
+//                                     .status(404)
+//                                     .send();
+//                             }
+//                             res.send({user});
+//                         }).catch((e) => {
+//                             res
+//                                 .status(400)
+//                                 .send();
+//                         });
+//                     })
+//                     .then(() => {
+//                         res.redirect('https://www.mund.io/#/skins');
+//                     })
+//                     .catch((e) => {
+//                         console.log(e);
+//                         res
+//                             .status(404)
+//                             .send();
+//                     });
+//             }
+//         });
+// });
 
-app.get('/cancel', (req, res) => res.send('Cancelled'));
+// app.get('/cancel', (req, res) => res.send('Cancelled'));
 
 if (currentIP != 'www.mund.io') {
     app.listen(port, () => {

@@ -3,14 +3,13 @@ var uuid = require('node-uuid');
 const axios = require('axios');
 import currentIP from 'ip';
 import currentPort from '../port';
-import '../styles/styles.css';
+import style from '../styles/style.jsx';
 
 
 var SkinList = require('SkinList');
 var AddSkin = require('AddSkin');
 var SkinSearch = require('SkinSearch');
 var SkinAPI = require('SkinAPI');
-var Logout = require('Logout');
 
 
 
@@ -90,26 +89,6 @@ var SkinApp = React.createClass({
       .catch((e) => {
         window.alert(e);
       });
-  },
-  handleAddSkin: function (name) {
-    axios({
-      method: 'post',
-      headers: {
-        'x-auth': localStorage.getItem('x-auth')
-      },
-      url: window.location.protocol+'//'+currentIP+':'+currentPort+'/skins',
-      data: {
-        name: name
-      }
-    });
-    this.setState({
-      skins: [
-        ...this.state.skins, {
-          _id: uuid(),
-          name: name
-        }
-      ]
-    });
   },
   handleConfirm: function (skinId, price) {
     if (price <= this.state.creditBalance) {
@@ -251,21 +230,10 @@ var SkinApp = React.createClass({
       // }
       return (
         <div>
-          <div>
-            <div style={{float: 'left', width: '40%'}}>
-            <br/>
-                <input ref="nickName" type="text" placeholder="Nickname"/>
-                <button className={buttonTags} id="start" onClick={this.handleStart}>START GAME ⚽</button>
-
-                <button onClick={()=>{
-                  location.reload();
-                }}>Reload</button>
           
-            </div>
-          </div>
 
 
-          <div>
+          <div style={{textAlign:'center'}}>
             
             <SkinSearch onSearch={this.handleSearch}/>
             <div  style={{float: 'left', width: '100%',textAlign:'center'}}
@@ -273,9 +241,10 @@ var SkinApp = React.createClass({
               <h2>Coins: {creditBalance}</h2>
             </div>
             <div style={{float: 'left', width: '40%'}}>
-                
-              <h2 className="page-title">Unlocked Skins</h2>
-              <div className="row" id="owned">
+              <div style={{float: 'right',width: '100%'}} >
+                <h2 style={{float: 'right'}} className="page-title">Unlocked Skins</h2>
+              </div>
+              <div style={{float: 'right'}} className="row" id="owned">
                 <div className="column small-centered">
                   <div className="container">
                     {/* <SkinSearch onSearch={this.OwnedhandleSearch}/> */}
@@ -285,10 +254,10 @@ var SkinApp = React.createClass({
               </div>
             </div>
 
-            <div style={{float: 'left', width: '40%'}}>
+            <div style={{float: 'right', width: '40%'}}>
               <h2 className="page-title">Locked Skins</h2>
 
-              <div className="row">
+              <div style={{float: 'left'}} className="row">
                 <div className="column small-centered small-11 medium-6 large-5">
                   <div className="container">
                     {/* <SkinSearch onSearch={this.handleSearch}/> */}

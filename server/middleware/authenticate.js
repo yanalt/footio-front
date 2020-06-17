@@ -12,7 +12,7 @@ var authenticate = (req, res, next) => { //every time you see this in a function
     req.token = token;
     next();
   }).catch((e) => {
-    res.status(401).send(); //means that the user needs to log in!
+    res.status(401).send(e); //means that the user needs to log in!
   });
 };
 
