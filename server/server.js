@@ -18,6 +18,7 @@ var {mongoose} = require('./db/mongoose');
 var {Skin} = require('./models/skin'); //now you can use mongoose functions like Skin.findOneAndRemove()
 var {User} = require('./models/user');
 var {Country} = require('./models/country');
+var {Room} = require('./models/room');
 var {authenticate} = require('./middleware/authenticate');
 var sec = require('./../sec.json');
 var nodemailer = require('nodemailer');
@@ -145,11 +146,7 @@ function updateCountryStats(code) {
             if (result.length == 0) {
                 var country = new Country({code, amount: 1});
                 country
-                    .save()
-                    .then((countryRes) => {})
-                    .catch((e) => {
-                        console.log(e);
-                    })
+                    .save();
             } else {
                 Country.findOneAndUpdate({
                     code
@@ -157,8 +154,6 @@ function updateCountryStats(code) {
                     $inc: {
                         amount: 1
                     }
-                }).then(() => {}).catch((e) => {
-                    console.log(e);
                 });
             }
         })
@@ -166,6 +161,48 @@ function updateCountryStats(code) {
             console.log(e);
         });
 }
+
+
+app.get('/roomStats',(req,res)=>{
+    Room.find({}).then((result)=>{
+        res.send({rooms:result});
+    }).catch((e)=>{
+        res.status(404).send(e);
+    })
+});
+
+app.post('/updateRooms',(req,res)=>{
+    // console.log(req.body);
+    Room.find({
+        ip: req.body.ip,
+        port: req.body.port
+    }).then((result)=>{
+        if(result.length==0){
+            let room = new Room({
+                ip: req.body.ip,
+                port: req.body.port,
+                location: req.body.location,
+                difficulty: req.body.difficulty,
+                playerAmount: req.body.playerAmount,
+                lastUpdate: new Date().getTime()
+            });
+            room.save();
+        } else {
+            Room.findOneAndUpdate({
+                ip: req.body.ip,
+                port: req.body.port
+            },{
+                $set :{
+                    difficulty: req.body.difficulty,
+                    playerAmount: req.body.playerAmount,
+                    lastUpdate: new Date().getTime()
+                }
+            }).then((r)=>{
+                console.log(r); //for some reason it doesn't update without this...
+            });
+        }
+    }).catch((e)=>{ console.log(e); });
+});
 
 app.get('/rooms', (req, res) => {
     var country = requestCountry(req);
@@ -474,6 +511,7 @@ app.post('/updatestats', (req, res) => {
 });
 
 app.post('/users/skinconfirm', (req, res) => { //we don't use authenticate since we don't have a token yet, we are trying to get one by logging in.
+    console.log(req.ip || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress);
     var skin = _.pick(req.body, ['skin']);
     User
         .findByToken(skin.skin)
@@ -918,272 +956,22 @@ app.delete('/users/me/token', authenticate, (req, res) => {
         });
 });
 
-// paypal.configure({
-//     'mode': 'live', //sandbox or live
-//     'client_id': sec.client_id,
-//     'client_secret': sec.client_secret
-// });
+function removeDeadRooms(){
+    let currentTime = new Date().getTime();
+    Room.find({}).then((result)=>{
+        result.forEach((r)=>{
+            if(currentTime - r.lastUpdate>10*1000){
+                Room.findByIdAndDelete(r._id).then((msg)=>{
+                    console.log(msg); //again, deletion doesn't work without this. for some reason mongoose stuff need a "then" 
+                });
+                console.log('Dead room deleted');
+            }
+        });
+    }).catch((e)=>{
+        console.log(e);
+    })
+}
 
-// app.post('/pay', (req, res) => {
-//     console.log(req.header('x-auth'));
-//     User
-//         .findByToken(req.header('x-auth'))
-//         .then((user) => {
-//             console.log(req.header('x-auth'));
-//             let sum = 0,
-//                 product = "";
-//             switch (req.body.type) {
-//                 case 'credit5':
-//                     sum = 5;
-//                     product = "1000 credit points";
-//                     break;
-//                 case 'credit10':
-//                     sum = 10;
-//                     product = "2400 credit points";
-//                     break;
-//                 case 'credit20':
-//                     sum = 20;
-//                     product = "6000 credit points";
-//                     break;
-//                 default:
-//                     console.log('error');
-//                     throw new Error("No such payment option");
-//             }
-
-//             const create_payment_json = {
-//                 "intent": "sale",
-//                 "payer": {
-//                     //"auth": req.header('x-auth'),
-//                     "payment_method": "paypal"
-//                 },
-//                 "redirect_urls": {
-//                     "return_url": "https://www.mund.io/success" + sum,
-//                     "cancel_url": "https://www.mund.io/cancel"
-//                 },
-//                 "transactions": [
-//                     {
-//                         "item_list": {
-//                             "items": [
-//                                 {
-//                                     "name": product + " for the user with the following email: " + user.email,
-//                                     "sku": "001",
-//                                     "price": sum,
-//                                     "currency": "USD",
-//                                     "quantity": 1
-//                                 }
-//                             ]
-//                         },
-//                         "amount": {
-//                             "currency": "USD",
-//                             "total": sum
-//                         },
-//                         "description": user._id
-//                     }
-//                 ]
-//             };
-//             paypal
-//                 .payment
-//                 .create(create_payment_json, function (error, payment) {
-//                     if (error) {
-//                         console.log("create");
-//                         console.log(error);
-//                         throw error;
-//                     } else {
-//                         for (let i = 0; i < payment.links.length; i++) {
-//                             if (payment.links[i].rel === 'approval_url') {
-//                                 res.send({link: payment.links[i].href});
-//                             }
-//                         }
-//                     }
-//                 });
-//         })
-//         .catch((e) => {
-//             console.log("catch");
-//             console.log(e);
-//             return e;
-//         })
-
-// });
-
-// //find a way to unify the following functions....
-
-// app.get('/success5', (req, res) => {
-//     const payerId = req.query.PayerID;
-//     const paymentId = req.query.paymentId;
-//     const execute_payment_json = {
-//         "payer_id": payerId,
-//         "transactions": [
-//             {
-//                 "amount": {
-//                     "currency": "USD",
-//                     "total": "5.00"
-//                 }
-//             }
-//         ]
-//     };
-
-//     paypal
-//         .payment
-//         .execute(paymentId, execute_payment_json, function (error, payment) {
-//             if (error) {
-//                 console.log(error.response);
-//                 throw error;
-//             } else {
-//                 //console.log(JSON.stringify(payment));
-//                 User
-//                     .findById(payment.transactions[0].description)
-//                     .then((user) => {
-//                         User.findOneAndUpdate({
-//                             _id: user._id
-//                         }, {
-//                             $set: {
-//                                 creditBalance: user.creditBalance + 1000
-//                             }
-//                         }).then((user) => {
-//                             if (!user) {
-//                                 return res
-//                                     .status(404)
-//                                     .send();
-//                             }
-//                             res.send({user});
-//                         }).catch((e) => {
-//                             res
-//                                 .status(400)
-//                                 .send();
-//                         });
-//                     })
-//                     .then(() => {
-//                         res.redirect('https://www.mund.io/#/skins');
-//                     })
-//                     .catch((e) => {
-//                         console.log(e);
-//                         res
-//                             .status(404)
-//                             .send();
-//                     });
-//             }
-//         });
-// });
-
-// app.get('/success10', (req, res) => {
-//     const payerId = req.query.PayerID;
-//     const paymentId = req.query.paymentId;
-
-//     const execute_payment_json = {
-//         "payer_id": payerId,
-//         "transactions": [
-//             {
-//                 "amount": {
-//                     "currency": "USD",
-//                     "total": "10.00"
-//                 }
-//             }
-//         ]
-//     };
-
-//     paypal
-//         .payment
-//         .execute(paymentId, execute_payment_json, function (error, payment) {
-//             if (error) {
-//                 console.log(error.response);
-//                 throw error;
-//             } else {
-//                 //console.log(JSON.stringify(payment));
-//                 User
-//                     .findById(payment.transactions[0].description)
-//                     .then((user) => {
-//                         User.findOneAndUpdate({
-//                             _id: user._id
-//                         }, {
-//                             $set: {
-//                                 creditBalance: user.creditBalance + 2400
-//                             }
-//                         }).then((user) => {
-//                             if (!user) {
-//                                 return res
-//                                     .status(404)
-//                                     .send();
-//                             }
-//                             res.send({user});
-//                         }).catch((e) => {
-//                             res
-//                                 .status(400)
-//                                 .send();
-//                         });
-//                     })
-//                     .then(() => {
-//                         res.redirect('https://www.mund.io/#/skins');
-//                     })
-//                     .catch((e) => {
-//                         console.log(e);
-//                         res
-//                             .status(404)
-//                             .send();
-//                     });
-//             }
-//         });
-// });
-
-// app.get('/success20', (req, res) => {
-//     const payerId = req.query.PayerID;
-//     const paymentId = req.query.paymentId;
-
-//     const execute_payment_json = {
-//         "payer_id": payerId,
-//         "transactions": [
-//             {
-//                 "amount": {
-//                     "currency": "USD",
-//                     "total": "20.00"
-//                 }
-//             }
-//         ]
-//     };
-
-//     paypal
-//         .payment
-//         .execute(paymentId, execute_payment_json, function (error, payment) {
-//             if (error) {
-//                 console.log(error.response);
-//                 throw error;
-//             } else {
-//                 //console.log(JSON.stringify(payment));
-//                 User
-//                     .findById(payment.transactions[0].description)
-//                     .then((user) => {
-//                         User.findOneAndUpdate({
-//                             _id: user._id
-//                         }, {
-//                             $set: {
-//                                 creditBalance: user.creditBalance + 3000
-//                             }
-//                         }).then((user) => {
-//                             if (!user) {
-//                                 return res
-//                                     .status(404)
-//                                     .send();
-//                             }
-//                             res.send({user});
-//                         }).catch((e) => {
-//                             res
-//                                 .status(400)
-//                                 .send();
-//                         });
-//                     })
-//                     .then(() => {
-//                         res.redirect('https://www.mund.io/#/skins');
-//                     })
-//                     .catch((e) => {
-//                         console.log(e);
-//                         res
-//                             .status(404)
-//                             .send();
-//                     });
-//             }
-//         });
-// });
-
-// app.get('/cancel', (req, res) => res.send('Cancelled'));
 
 if (currentIP != 'www.mund.io') {
     app.listen(port, () => {
@@ -1206,6 +994,8 @@ if (currentIP != 'www.mund.io') {
 module.exports = {
     app
 };
+
+setInterval(removeDeadRooms,10*1000);
 
 // these things either should be in the front end, or just don't work with
 // postman localStorage.setItem('token', token); //this isn't from the course,
