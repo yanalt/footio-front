@@ -33,8 +33,7 @@
     "react-dom": "^0.14.7",
     "react-router": "^2.0.0",
     "request-country": "^0.1.0",
-    "validator": "^5.6.0",
-    "whatwg-fetch": "^2.0.3"
+    "validator": "^5.6.0"
   },
   "devDependencies": {
     "babel-core": "^6.5.1",

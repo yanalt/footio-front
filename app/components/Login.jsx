@@ -19,14 +19,15 @@ export var Login = React.createClass({
                     password: loginPassword
                 }
             }).then(function(response){
+                    console.log(response.headers['x-auth']);
                     localStorage.setItem('x-auth',response.headers['x-auth']);
-                    window.location.hash='#/skins';
+                    window.location.hash='#/rooms';
             }).catch((e)=>{
                 console.log(e);
                 if(e.status==400||e.status==404){
                     if(this.refs.errorTitle.firstChild)
                         this.refs.errorTitle.removeChild(this.refs.errorTitle.firstChild);
-                    this.refs.errorTitle.appendChild(document.createTextNode("The provided email and password don't match!"));
+                    this.refs.errorTitle.appendChild(document.createTextNode("The provided ID and code don't match!"));
                 }
             });
         } else {
@@ -34,51 +35,16 @@ export var Login = React.createClass({
                 this.refs.loginPassword.focus();
                 if(this.refs.errorTitle.firstChild)
                     this.refs.errorTitle.removeChild(this.refs.errorTitle.firstChild);
-                this.refs.errorTitle.appendChild(document.createTextNode("Please type your password!"));
+                this.refs.errorTitle.appendChild(document.createTextNode("Please type your code!"));
             }
             if (loginEmail.length === 0) {
                 this.refs.loginEmail.focus();
                 if(this.refs.errorTitle.firstChild)
                     this.refs.errorTitle.removeChild(this.refs.errorTitle.firstChild);
-                this.refs.errorTitle.appendChild(document.createTextNode("Please type your email!"));
+                this.refs.errorTitle.appendChild(document.createTextNode("Please type your ID!"));
             }
         }
     },
-    handleSignup: function (e) {
-        e.preventDefault();
-        window.location.hash='#/signup';
-    },
-    handleForgot: function (e) {
-        e.preventDefault();
-        var loginEmail = this.refs.loginEmail.value;
-
-        if (loginEmail.length > 0) {
-            axios({
-                method: 'post',
-                //url:'https://nameless-island-69625.herokuapp.com/login',
-                url: window.location.protocol+'//'+currentIP+':'+currentPort+'/forgot',
-                data:{
-                    email: loginEmail,
-                }
-            }).then(function(response){
-                    localStorage.setItem('x-auth',response.headers['x-auth']);
-                    window.location.hash='#/forgot';
-            }).catch((e)=>{
-                console.log(e);
-                if(e.status==400||e.status==404){
-                    if(this.refs.errorTitle.firstChild)
-                        this.refs.errorTitle.removeChild(this.refs.errorTitle.firstChild);
-                    this.refs.errorTitle.appendChild(document.createTextNode("The provided email is not registered!"));
-                }
-            });
-        }
-            if (loginEmail.length === 0) {
-                this.refs.loginEmail.focus();
-                if(this.refs.errorTitle.firstChild)
-                    this.refs.errorTitle.removeChild(this.refs.errorTitle.firstChild);
-                this.refs.errorTitle.appendChild(document.createTextNode("Please type your email!"));
-            }
-        },
     handleGuest: function (e) {
         e.preventDefault();
         window.location.hash='#/rooms';
@@ -93,7 +59,7 @@ export var Login = React.createClass({
             }
         }).then(function(response){
             if(response!=undefined&&response!=null)
-                window.location.hash='#/skins';
+                window.location.hash='#/rooms';
         }).catch((e)=>{
             console.log(e);
         });
@@ -111,13 +77,14 @@ export var Login = React.createClass({
         }
         return (
             <div>
-                <h1 className="page-title">MUND</h1>
+                <h1 className="page-title">FOOTIO</h1>
                 <div className="row">
                     <div className="columns small-centered medium-centered large-centered small-10 medium-6 large-4">
                         <div className="container__footer">
                             <form onSubmit={this.handleSubmit}>
-                                <input type="text" style={inputStyle} ref="loginEmail" placeholder="Your email"/>
-                                <input type="password" style={inputStyle} ref="loginPassword" placeholder="Your password"/>
+                                These can be found in the "sign out" section in the mobile app.
+                                <input type="text" style={inputStyle} ref="loginEmail" placeholder="Your mobile ID"/>
+                                <input type="password" style={inputStyle} ref="loginPassword" placeholder="Your mobile code"/>
                                 <button onTouchEnd={this.handleSubmit} className={buttonTags}>Login</button>
                                 <div ref="errorTitle"></div>
                             </form>
@@ -128,8 +95,6 @@ export var Login = React.createClass({
                     <div className="columns small-centered medium-centered large-centered small-10 medium-6 large-4">
                         <div className="container__footer">
                             <button className={buttonTags} onTouchEnd={this.handleGuest} onClick={this.handleGuest}>Play as a guest! ⚽</button>
-                            <button className={buttonTags} onTouchEnd={this.handleSignup} onClick={this.handleSignup}>Sign up!</button>
-                            <button className={buttonTags} onTouchEnd={this.handleForgot} onClick={this.handleForgot}>I forgot my password...</button>
                         </div>
                     </div>
                 </div>

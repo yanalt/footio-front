@@ -10,6 +10,7 @@ var mongoose = require('mongoose');
 mongoose.Promise = global.Promise; //we tell mongoose to use the JS built-ing Promise we usually use
 mongoose.connect(process.env.MONGODB_URI);
 
+
 module.exports = {
     mongoose
 };

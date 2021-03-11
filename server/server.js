@@ -1,33 +1,31 @@
 require('./config/config');
 
-const {OAuth2Client} = require('google-auth-library');
-const client = new OAuth2Client(process.env.CLIENT_ID);
-
-const currentIP = require('./../ip.json').ip;
-const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const requestCountry = require('request-country');
 
-const _ = require('lodash');
-// const paypal = require('paypal-rest-sdk');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
+let {mongoose} = require('./db/mongoose'); //don't delete this ever again, unless you want to build mongodb connection from scratch.
+// let uidDictionary = ['a','b','c','d','e','f','g','h','i','j','k','m','n','p','q','r','s','t','u','v','w','x','y','z','2','3','4','5','6','7','8','9'];
+// const uid = new ShortUniqueId({ dictionary: uidDictionary , length: 6 });
+// const upass = new ShortUniqueId({ dictionary: uidDictionary , length: 8 });
 
-var {mongoose} = require('./db/mongoose');
-var {Skin} = require('./models/skin'); //now you can use mongoose functions like Skin.findOneAndRemove()
-var {User} = require('./models/user');
-var {Country} = require('./models/country');
-var {Room} = require('./models/room');
-var {authenticate} = require('./middleware/authenticate');
-var sec = require('./../sec.json');
-var nodemailer = require('nodemailer');
-var admin = require('firebase-admin');
+let {Skin} = require('./models/skin'); //now you can use mongoose functions like Skin.findOneAndRemove()
+let {User} = require('./models/user');
+let {Ball} = require('./models/ball');
+let {Country} = require('./models/country');
+// let {Room} = require('./models/room');
+let {authenticate} = require('./middleware/authenticate');
+let sec = require('./../sec.json');
 
-var app = express();
+let rooms = [];
+let alphabet = 'abcdefghijklmnopqrstuvwxyz';
+
+let app = express();
 // const port = process.env.PORT; //if the app is running on heroku, then it
 // will be set accordingly
-const port = 3001;
+const port = process.env.PORT;
 
 const https = require("https"),
     helmet = require("helmet");
@@ -47,104 +45,107 @@ app.use(function (req, res, next) {
     next();
 });
 
-admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-    apiKey: sec.apiKey,
-    authDomain: sec.authDomain,
-    databaseURL: sec.databaseURL,
-    projectId: sec.projectId,
-    storageBucket: sec.storageBucket,
-    messagingSenderId: sec.messagingSenderId,
-    appId: sec.appId
-  });
+// admin.initializeApp({
+//     credential: admin.credential.applicationDefault(),
+//     apiKey: sec.apiKey,
+//     authDomain: sec.authDomain,
+//     databaseURL: sec.databaseURL,
+//     projectId: sec.projectId,
+//     storageBucket: sec.storageBucket,
+//     messagingSenderId: sec.messagingSenderId,
+//     appId: sec.appId
+//   });
 
-app.post('/forgot', (req, res) => {
-    let body = _.pick(req.body, ['email']);
-    let key = Math.floor(Math.random() * 1000000000) + '';
+// app.post('/forgot', (req, res) => {
+//     let body = _.pick(req.body, ['email']);
+//     let key = Math.floor(Math.random() * 1000000000) + '';
 
-    User.findOneAndUpdate({
-        email: body.email
-    }, {
-        $set: {
-            key: key
-        }
-    }).then((user) => {
-        if (!user) {
-            return res
-                .status(404)
-                .send();
-        }
-        // TODO: the following needs some testing
-        let transporter = nodemailer.createTransport({
-            service: 'gmail',
-            secure: false,
-            port: 25,
-            auth: {
-                user: sec.email,
-                pass: sec.password
-            },
-            tls: {
-                rejectUnauthorized: false
-            }
-        });
+//     User.findOneAndUpdate({
+//         email: body.email
+//     }, {
+//         $set: {
+//             key: key
+//         }
+//     }).then((user) => {
+//         if (!user) {
+//             return res
+//                 .status(404)
+//                 .send();
+//         }
+//         // TODO: the following needs some testing
+//         let transporter = nodemailer.createTransport({
+//             service: 'gmail',
+//             secure: false,
+//             port: 25,
+//             auth: {
+//                 user: sec.email,
+//                 pass: sec.password
+//             },
+//             tls: {
+//                 rejectUnauthorized: false
+//             }
+//         });
 
-        let HelperOptions = {
-            from: sec.email,
-            to: body.email,
-            subject: 'Password reset for MUND.io',
-            text: "If you didn't request a password reset, or no longer want to reset, then ignore " +
-                    "this mail. Otherwise, use this key: " + key
-        };
+//         let HelperOptions = {
+//             from: sec.email,
+//             to: body.email,
+//             subject: 'Password reset for MUND.io',
+//             text: "If you didn't request a password reset, or no longer want to reset, then ignore " +
+//                     "this mail. Otherwise, use this key: " + key
+//         };
 
-        transporter.sendMail(HelperOptions, (error, info) => {
-            if (error) {
-                return console.log(error);
-            }
-            console.log("The message was sent!");
-            console.log(info);
-        });
-        res.send({user});
-    }).catch((e) => {
-        res
-            .status(400)
-            .send();
-    });
-});
+//         transporter.sendMail(HelperOptions, (error, info) => {
+//             if (error) {
+//                 return console.log(error);
+//             }
+//             console.log("The message was sent!");
+//             console.log(info);
+//         });
+//         res.send({user});
+//     }).catch((e) => {
+//         res
+//             .status(400)
+//             .send();
+//     });
+// });
 
 // app.post('/skins', authenticate, (req, res) => { //this is used to add a new
-// skin   var skin = new Skin({     name: req.body.name, //we make a new skin
+// skin   let skin = new Skin({     name: req.body.name, //we make a new skin
 // by taking the "name" sent from body     icon: req.body.name,     sprite:
 // req.body.name,   });   skin.save().then((doc) => { //save the model to the
 // database     res.send(doc); //send the skin document back   }, (e) => {
 // res.status(400).send(e); //if there is an error we report about it   }); });
 
-async function verify(idToken) {
-    admin.auth().verifyIdToken(idToken)
-  .then(function(decodedToken) {
-    let uid = decodedToken.uid;
-    // console.log(uid);
-  }).catch(function(e) {
-    console.log("KEKW");
-    console.log(e);
-  });
-}
+// async function verify(idToken) {
+//     admin.auth().verifyIdToken(idToken)
+//   .then(function(decodedToken) {
+//     let uid = decodedToken.uid;
+//     // console.log(uid);
+//   }).catch(function(e) {
+//     console.log("KEKW");
+//     console.log(e);
+//   });
+// }
 
-function randomWord(wordLength) {
-    let letters = "abcdefghijklmnopqrstuvwxyz";
-    let word = "";
-    for (let i = 0; i < wordLength; i++) {
-        let index = Math.floor(Math.random() * letters.length);
-        word += letters[index];
-    }
-    return word;
-}
+// function randomWord(wordLength) {
+//     let letters = "abcdefghijklmnopqrstuvwxyz";
+//     let word = "";
+//     for (let i = 0; i < wordLength; i++) {
+//         let index = Math.floor(Math.random() * letters.length);
+//         word += letters[index];
+//     }
+//     return word;
+// }
+
+// TODO: limit html requests from same IP. make an IP array with amount of requests, and an interval decreases those amounts every hour or so.
+// TODO: put stricter limit on login requests.
 
 function updateCountryStats(code) {
     Country
         .find({code})
         .then((result) => {
             if (result.length == 0) {
-                var country = new Country({code, amount: 1});
+                let country = new Country({code, amount: 1});
                 country
                     .save();
             } else {
@@ -162,50 +163,49 @@ function updateCountryStats(code) {
         });
 }
 
+// app.get('/1', function(request, response){  // TODO: make a static landing page that links to android and ios apps.
+//     response.sendFile('/root/footio-front/public/1.png');
+// });
+
+
+
+
 
 app.get('/roomStats',(req,res)=>{
-    Room.find({}).then((result)=>{
-        res.send({rooms:result});
-    }).catch((e)=>{
-        res.status(404).send(e);
-    })
+    res.send({rooms});
 });
 
 app.post('/updateRooms',(req,res)=>{
-    // console.log(req.body);
-    Room.find({
-        ip: req.body.ip,
-        port: req.body.port
-    }).then((result)=>{
-        if(result.length==0){
-            let room = new Room({
-                ip: req.body.ip,
-                port: req.body.port,
-                location: req.body.location,
-                difficulty: req.body.difficulty,
-                playerAmount: req.body.playerAmount,
-                lastUpdate: new Date().getTime()
-            });
-            room.save();
-        } else {
-            Room.findOneAndUpdate({
-                ip: req.body.ip,
-                port: req.body.port
-            },{
-                $set :{
-                    difficulty: req.body.difficulty,
-                    playerAmount: req.body.playerAmount,
-                    lastUpdate: new Date().getTime()
-                }
-            }).then((r)=>{
-                console.log(r); //for some reason it doesn't update without this...
-            });
-        }
-    }).catch((e)=>{ console.log(e); });
+    let currentTime = new Date().getTime();
+    let found = false;
+    for (let i = 0; i < rooms.length; i++) {
+        if(rooms[i].location==req.body.location&&rooms[i].port==req.body.port){
+            rooms[i].playerAmount=req.body.playerAmount;
+            rooms[i].lastUpdate =currentTime;
+            found = true;
+            break;
+        }        
+    }
+    if(!found){
+        rooms.push({
+            playerAmount:req.body.playerAmount,
+            playerMax:req.body.playerMax,
+            ip:req.body.ip,
+            port:req.body.port,
+            location:req.body.location,
+            difficulty:req.body.difficulty,
+            lastUpdate: currentTime
+        });
+    }
+    found = null;
+    currentTime = null;
+    res.end();
+    res=null;
+    req=null;
 });
 
 app.get('/rooms', (req, res) => {
-    var country = requestCountry(req);
+    let country = requestCountry(req);
     if (country == null || country == undefined) 
         country = "unknown";
     updateCountryStats(country);
@@ -235,8 +235,8 @@ app.get('/skins', authenticate, (req, res) => {
         });
 });
 
-app.get('/skins/:id', authenticate, (req, res) => {
-    var id = req.params.id; //take the ":id" part of the address
+app.get('/skins/:id', authenticate, (req, res) => { //  UNUSED
+    let id = req.params.id; //take the ":id" part of the address
 
     if (!ObjectID.isValid(id)) { //checks if the id is valid
         return res
@@ -265,8 +265,8 @@ app.get('/skins/:id', authenticate, (req, res) => {
         });
 });
 
-app.delete('/skins/:id', authenticate, (req, res) => { //deletes a single skin.
-    var id = req.params.id; //gets the id of the skin from the address
+app.delete('/skins/:id', authenticate, (req, res) => { //   UNUSED //deletes a single skin.
+    let id = req.params.id; //gets the id of the skin from the address
 
     if (!ObjectID.isValid(id)) { //checks if it is a valid id
         return res
@@ -298,160 +298,96 @@ app.delete('/skins/:id', authenticate, (req, res) => { //deletes a single skin.
 // we use req.params for route parameters. the address has to contain those. we
 // use req.body for form data.
 
-app.patch('/skins/:id', authenticate, (req, res) => { //updates a skin, needs lodash for _.pick() and _.isBoolean
-    var id = req.params.id;
-    var body = _.pick(req.body, ['name', 'completed']); //lodash takes the 'name' and 'completed' properties sent from the request
 
-    if (!ObjectID.isValid(id)) {
-        console.log('Invalid!');
-        return res
-            .status(404)
-            .send();
-    }
 
-    if (_.isBoolean(body.completed) && body.completed) { //if body.completed is a defined boolean, check if the value is true.
-        body.completedAt = new Date().getTime(); //we write down when the skin was completed using unix epic time.
-    } else {
-        body.completed = false;
-        body.completedAt = null;
-    }
+// app.post('/verify', (req, res) => {
+//     let body = _.pick(req.body, ['email', 'key']);
+//     if (body.email != "" && body.key != "") {
+//         User.findOneAndUpdate({
+//             email: body.email,
+//             key: body.key + ''
+//         }, {
+//             $set: {
+//                 verified: true,
+//                 key: -1
+//             }
+//         }, {new: true}).then((user) => {
+//             if (!user) {
+//                 return res
+//                     .status(404)
+//                     .send();
+//             }
 
-    // look up mongodb update operators... {$set: body} is like {$set:
-    // {name,completed,completedAt}}. you tell mongodb to update 'body' {new: true}
-    // tells mongoose to send us the new updated values. you can set it to false if
-    // you want the original.
-    if (body.name != "" && body.name != null) { //i will update name only if a new name was sent
-        Skin.findOneAndUpdate({
-            _id: id,
-            _creator: req.user._id
-        }, {
-            $set: body
-        }, {new: true}).then((skin) => {
-            if (!skin) {
-                return res
-                    .status(404)
-                    .send();
-            }
+//             res.send();
+//         }).catch((e) => {
+//             res
+//                 .status(400)
+//                 .send();
+//         })
+//     } else {
+//         res
+//             .status(404)
+//             .send();
+//     }
+// });
 
-            res.send({skin});
-        }).catch((e) => {
-            res
-                .status(400)
-                .send();
-        })
-    } else {
-        Skin.findOneAndUpdate({
-            _id: id,
-            _creator: req.user._id
-        }, {
-            $set: {
-                completed,
-                completedAt
-            }
-        }, {new: true}).then((skin) => {
-            if (!skin) {
-                return res
-                    .status(404)
-                    .send();
-            }
+// app.patch('/users', (req, res) => {
+//     let body = _.pick(req.body, ['email', 'password', 'key']);
 
-            res.send({skin});
-        }).catch((e) => {
-            res
-                .status(400)
-                .send();
-        })
-    }
-});
+//     if (body.email != "" && body.password != "" && body.key != "" && body.key != -1 && body.key != "-1") {
+//         bcrypt.genSalt(10, (err, salt) => {
+//             bcrypt.hash(body.password, salt, (err, hash) => {
+//                 body.password = hash;
+//                 User
+//                     .findOne({email: body.email})
+//                     .then((userr) => {
+//                         if (userr.tries >= 3) {
+//                             throw 'Error: Too many tries.';
+//                         }
+//                         User.findOneAndUpdate({
+//                             email: body.email,
+//                             key: body.key
+//                         }, {
+//                             $set: {
+//                                 password: body.password,
+//                                 key: -1
+//                             },
+//                             $inc: {
+//                                 tries: 1
+//                             }
+//                         }, {new: true}).then((user) => {
+//                             if (!user) {
+//                                 return res
+//                                     .status(404)
+//                                     .send();
+//                             }
 
-app.post('/verify', (req, res) => {
-    var body = _.pick(req.body, ['email', 'key']);
-    if (body.email != "" && body.key != "") {
-        User.findOneAndUpdate({
-            email: body.email,
-            key: body.key + ''
-        }, {
-            $set: {
-                verified: true,
-                key: -1
-            }
-        }, {new: true}).then((user) => {
-            if (!user) {
-                return res
-                    .status(404)
-                    .send();
-            }
+//                             res.send();
+//                         }).catch((e) => {
+//                             res
+//                                 .status(404)
+//                                 .send();
+//                         });
+//                     })
+//                     .catch((e) => {
+//                         res
+//                             .status(400)
+//                             .send();
+//                     });
+//             });
+//         });
 
-            res.send();
-        }).catch((e) => {
-            res
-                .status(400)
-                .send();
-        })
-    } else {
-        res
-            .status(404)
-            .send();
-    }
-});
-
-app.patch('/users', (req, res) => {
-    var body = _.pick(req.body, ['email', 'password', 'key']);
-
-    if (body.email != "" && body.password != "" && body.key != "" && body.key != -1 && body.key != "-1") {
-        bcrypt.genSalt(10, (err, salt) => {
-            bcrypt.hash(body.password, salt, (err, hash) => {
-                body.password = hash;
-                User
-                    .findOne({email: body.email})
-                    .then((userr) => {
-                        if (userr.tries >= 3) {
-                            throw 'Error: Too many tries.';
-                        }
-                        User.findOneAndUpdate({
-                            email: body.email,
-                            key: body.key
-                        }, {
-                            $set: {
-                                password: body.password,
-                                key: -1
-                            },
-                            $inc: {
-                                tries: 1
-                            }
-                        }, {new: true}).then((user) => {
-                            if (!user) {
-                                return res
-                                    .status(404)
-                                    .send();
-                            }
-
-                            res.send();
-                        }).catch((e) => {
-                            res
-                                .status(404)
-                                .send();
-                        });
-                    })
-                    .catch((e) => {
-                        res
-                            .status(400)
-                            .send();
-                    });
-            });
-        });
-
-    } else {
-        res
-            .status(404)
-            .send();
-    }
-});
+//     } else {
+//         res
+//             .status(404)
+//             .send();
+//     }
+// });
 
 // this should create a token for skin confirmation only by the game server
 
 app.post('/users/skintoken', (req, res) => { //we don't use authenticate since we don't have a token yet, we are trying to get one by logging in.
-    var xauth = req.headers['x-auth'];
+    let xauth = req.headers['x-auth'];
     User
         .findByToken(xauth)
         .then((user) => { //we find the user with x-auth
@@ -475,116 +411,92 @@ app.post('/users/skintoken', (req, res) => { //we don't use authenticate since w
 
 app.post('/updatestats', (req, res) => {
     console.log("====================");
-    console.log("goalId: " + req.body.scorerServerId);
-    console.log("assistId: " + req.body.assistServerId);
+    console.log("id: " + req.body.serverId);
+    console.log("points: " + req.body.points);
 
-    if (req.body.scorerServerId) {
+    if (req.body.serverId) {
         User.findOneAndUpdate({
-            _id: req.body.scorerServerId
+            _id: req.body.serverId
         }, {
             $inc: {
                 goals: 1,
-                creditBalance: 10
+                creditBalance: req.body.points
             }
-        }).then(() => {}).catch((e) => {
+        }).then((r) => {
+            console.log('stats updated successfully');
+            res.status(200).send();
+        }).catch((e) => {
             console.log(e);
             res
                 .status(400)
                 .send(e);
         });
     }
-    if (req.body.assistServerId && req.body.assistServerId != req.body.scorerServerId) {
-        User.findOneAndUpdate({
-            _id: req.body.assistServerId
-        }, {
-            $inc: {
-                assists: 1,
-                creditBalance: 15
-            }
-        }).then(() => {}).catch((e) => {
-            console.log(e);
-            res
-                .status(400)
-                .send(e);
-        });
-    }
+
 });
 
-app.post('/users/skinconfirm', (req, res) => { //we don't use authenticate since we don't have a token yet, we are trying to get one by logging in.
-    console.log(req.ip || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress);
-    var skin = _.pick(req.body, ['skin']);
-    User
-        .findByToken(skin.skin)
-        .then((user) => {
-            //we find the user with x-auth
-            user
-                .removeToken(skin.skin)
-                .then(() => {
-                    Skin
-                        .findById(user.currentSkin)
-                        .then((thisskin) => {
-                            console.log(thisskin);
-                            res.send({userId: user._id, skinsprite: thisskin.sprite}); //we send the skin name inside an object so we can send it with other stuff in the future
-                        }, (e) => {
-                            console.log(e);
-                            res
-                                .status(400)
-                                .send(e);
-                        });
-                }); //we want to remove the skin token, so it won't be used by other users
+// app.post('/users/skinconfirm', (req, res) => { //we don't use authenticate since we don't have a token yet, we are trying to get one by logging in.
+//     // console.log(req.ip || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress);
+//     // let skin = _.pick(req.body, ['skin']);
+//     let skin = {
+//         skin : req.body.skin
+//     }
+//     User
+//         .findByToken(skin.skin)
+//         .then((user) => {
+//             //we find the user with x-auth
+//             user
+//                 .removeToken(skin.skin)
+//                 .then(() => {
+//                     Skin
+//                         .findById(user.currentSkin)
+//                         .then((thisskin) => {
+//                             console.log(thisskin);
+//                             if(!thisskin)
+//                                 res.send({userId: user._id, skinsprite: 0, ballsprite: 0}); 
+//                             else
+//                                 res.send({userId: user._id, skinsprite: thisskin.sprite}); //we send the skin name inside an object so we can send it with other stuff in the future
+//                         }, (e) => {
+//                             console.log(e);
+//                             res
+//                                 .status(400)
+//                                 .send(e);
+//                         });
+//                 }); //we want to remove the skin token, so it won't be used by other users
 
-        })
-        .catch((e) => {
-            console.log(e);
-            res
-                .status(400)
-                .send({skinsprite: null});
-        });
-});
+//         })
+//         .catch((e) => {
+//             console.log(e);
+//             res
+//                 .status(400)
+//                 .send({skinsprite: null});
+//         });
+// });
 
 // POST /users - this is the sign up
 app.post('/users', (req, res) => {
-    var body = {
+
+
+
+    let body = {
         email: req.body.email,
         password: req.body.password
     }
-    let key = Math.floor(Math.random() * 1000000000) + '';
-    body.key = key;
-    var user = new User(body); // user.email=body.email, user.password=body.password .
+
+    console.log(body);
+
+    let user = new User(body); // user.email=body.email, user.password=body.password .
+
+    console.log(user);
 
     user
         .save()
-        .then(() => { //we save the user with mongoose
+        .then((res) => { //we save the user with mongoose
+            console.log(res);
             return user.generateAuthToken(); //we use this function from user.js to save the new token into user.
         })
         .then((token) => { //the function above returns a token, and the .then() gathers it.
-            let transporter = nodemailer.createTransport({
-                service: 'gmail',
-                secure: false,
-                port: 25,
-                auth: {
-                    user: sec.email,
-                    pass: sec.password
-                },
-                tls: {
-                    rejectUnauthorized: false
-                }
-            });
-
-            let HelperOptions = {
-                from: sec.email,
-                to: body.email,
-                subject: 'Email verification for MUND.io',
-                text: "Use this key: " + key
-            };
-
-            transporter.sendMail(HelperOptions, (error, info) => {
-                if (error) {
-                    return console.log(error);
-                }
-                console.log("The message was sent!");
-                console.log(info);
-            });
+            console.log(token);
             res
                 .header('x-auth', token)
                 .send(user); //the sent result will be the user but it will have an HTTP header called 'x-auth' which will have the token in it.
@@ -633,12 +545,55 @@ app.post('/users/androidsignup', (req, res) => {
     });
 });
 
+
+app.post('/users/codesignup', (req,res)=>{
+    console.log("New skincode sign up!");
+    let body = {code : req.body.code};
+
+
+    let user = new User(body);
+    user.refreshToken = req.body.refreshToken;
+
+    user
+            .save()
+            .then(() => { //we save the user with mongoose
+                return user.generateAuthToken();
+            })
+            .then((token) => {
+                //the function above returns a token, and the .then() gathers it.
+                res
+                    .header('x-auth', token)
+                    .send(user); //the sent result will be the user but it will have an HTTP header called 'x-auth' which will have the token in it.
+            })
+            .catch((e) => {
+                res
+                    .status(400)
+                    .send(e);
+            });
+});
+
+app.get('/privacy', (req, res) => { 
+    res.sendFile('/root/footio-front-2021/public/privacy.html');
+});
+
+
+
+
+
 app.get('/users/me/skins', authenticate, (req, res) => { //this route will require authentication, find the associated user, and send that user information back to us.
     res.send(req.user.skins);
 });
 
+app.get('/users/me/balls', authenticate, (req, res) => { //this route will require authentication, find the associated user, and send that user information back to us.
+    res.send(req.user.balls);
+});
+
 app.get('/users/me/currentskin', authenticate, (req, res) => { //this route will require authentication, find the associated user, and send that user information back to us.
     res.send(req.user.currentSkin);
+});
+
+app.get('/users/me/currentball', authenticate, (req, res) => { //this route will require authentication, find the associated user, and send that user information back to us.
+    res.send(req.user.currentBall);
 });
 
 app.get('/users/me/creditbalance', authenticate, (req, res) => { //this route will require authentication, find the associated user, and send that user information back to us.
@@ -646,7 +601,11 @@ app.get('/users/me/creditbalance', authenticate, (req, res) => { //this route wi
 });
 
 app.post('/users/purchase', authenticate, (req, res) => { //we don't use authenticate since we don't have a token yet, we are trying to get one by logging in.
-    var body = _.pick(req.body, ['skinId']); //lodash picks the email and password fields and puts them together as an object in a variable called "body".
+    // let body = _.pick(req.body, ['skinId']); //lodash picks the email and password fields and puts them together as an object in a letiable called "body".
+
+    let body = {
+        skinId : req.body.skinId
+    }
 
     User
         .findByToken(req.header('x-auth'))
@@ -705,7 +664,10 @@ app.post('/users/purchase', authenticate, (req, res) => { //we don't use authent
 });
 
 app.post('/users/skinpick', authenticate, (req, res) => {
-    var body = _.pick(req.body, ['skinId']);
+    // let body = _.pick(req.body, ['skinId']);
+    let body = {
+        skinId : req.body.skinId
+    }
     let isOwned = false;
     User
         .findByToken(req.header('x-auth'))
@@ -751,6 +713,105 @@ app.post('/users/skinpick', authenticate, (req, res) => {
         });
 });
 
+
+app.get('/balls', authenticate, async function(req, res) {
+    try{
+    let balls = await Ball.find({});
+    if(balls)
+        res.send({balls});
+    else
+        res
+        .status(400)
+        .send('none found');
+    }catch(e){
+        console.log(e);
+    }
+});
+
+app.post('/users/skinconfirm', async function(req, res){
+    try{
+        let token = req.body.token;
+        let user = await User.findByToken(token);
+        let skinSprite,ballSprite;
+        await user.removeToken(token);
+        let currentSkin = await Skin.findById(user.currentSkin);
+        if(!currentSkin)
+            skinSprite=0;
+        else
+            skinSprite=currentSkin.sprite
+        let currentBall = await Ball.findById(user.currentBall);
+        if(!currentBall)
+            ballSprite=0;
+        else
+            ballSprite=currentBall.sprite;
+
+        res.send({userId: user._id, skinSprite, ballSprite});
+
+    }catch(e){
+        res.send({userId: 0, skinSprite: 0, ballSprite: 0});
+        console.log(e);
+    }
+});
+
+app.post('/users/purchaseball', authenticate, async function(req, res) {
+    try{
+        let ballId = req.body.ballId;
+        let user = await User.findByToken(req.header('x-auth'));
+        let ballSkin = await Ball.findById(ballId) ;
+        for (let i = 0; i < user.balls.length; i++) {
+            if(user.balls[i] == ballId){
+                return res.status(400).send();
+            }
+        }
+        if(ballSkin.price <= user.creditBalance){
+            // await User.update(
+            //     {_id: user._id},
+            //     { $push: { balls: ballId } },
+            //     { $set: { creditBalance: user.creditBalance - ball.price } }
+            // );
+            await user.balls.push({ballId});
+            await user.update({$set: { creditBalance: user.creditBalance - ballSkin.price }});
+            await user.save();
+            
+            return res.status(200).send('ball purchase success');
+        }else{
+            return res.status(400).send('not enough credit');
+        }
+
+    }catch(e){
+        console.log(e);
+        return res.status(404).send('internal error');
+    }
+});
+
+app.post('/users/ballpick', authenticate, async function(req, res) {
+    try{
+        let ballId = req.body.ballId;
+        let isOwned = false;
+        let user = await User.findByToken(req.header('x-auth'));
+        for (let i = 0; i < user.balls.length; i++) {
+            if (user.balls[i].ballId == ballId) {
+                isOwned = true;
+                break;
+            }
+        }
+        if(isOwned){
+            await user.update({$set: {currentBall: ballId}});
+            await user.save();
+            res.status(200).send({ballId});
+        }
+        else {
+            console.log('no such ball');
+            return res
+                .status(400);
+        }
+    }catch(e){
+        console.log('internal error');
+        console.log(e);
+        return res.status(404);
+    }
+});
+
 app.post('/users/lasttime', authenticate, (req, res) => {
     User
         .findByToken(req.header('x-auth'))
@@ -786,7 +847,7 @@ app.post('/users/reward100', authenticate, (req, res) => {
     User
         .findByToken(req.header('x-auth'))
         .then((user) => {
-            user.creditBalance+=100;
+            user.creditBalance+=50;
             console.log(user.creditBalance);
             user.save().then(()=>{
                 res.send('Success from reward100');
@@ -802,7 +863,7 @@ app.post('/users/reward100', authenticate, (req, res) => {
         });
 });
 
-app.post('/users/androidlogin', (req, res) => { //we don't use authenticate since we don't have a token yet, we are trying to get one by logging in.
+app.post('/users/androidlogin', (req, res) => {   // TODO: update this to work with the new login system.
     console.log("New Android log in!");
     // console.log(req);
     // console.log(req.body);
@@ -874,13 +935,18 @@ app.post('/users/androidlogin', (req, res) => { //we don't use authenticate sinc
 });
 
 app.post('/users/login', (req, res) => { //we don't use authenticate since we don't have a token yet, we are trying to get one by logging in.
-    var body = _.pick(req.body, ['email', 'password']); //lodash picks the email and password fields and puts them together as an object in a variable called "body".
-    console.log("incoming new login");
+    // let body = _.pick(req.body, ['email', 'password']); //lodash picks the email and password fields and puts them together as an object in a letiable called "body".
+    let body = {
+        email: req.body.email,
+        password: req.body.password
+    }
+    console.log(req.body);
+    console.log("incoming new code login");
     // console.log(req.connection.remoteAddress);
     User
         .findByCredentials(body.email, body.password)
         .then((user) => { //we find the user in the database with body.email and body.password by using mongoose.
-
+            // console.log(user);
             if (user.tries >= 10) { //change to 3 or something
                 throw 'Error: Too many tries.';
             }
@@ -956,38 +1022,82 @@ app.delete('/users/me/token', authenticate, (req, res) => {
         });
 });
 
-function removeDeadRooms(){
-    let currentTime = new Date().getTime();
-    Room.find({}).then((result)=>{
-        result.forEach((r)=>{
-            if(currentTime - r.lastUpdate>10*1000){
-                Room.findByIdAndDelete(r._id).then((msg)=>{
-                    console.log(msg); //again, deletion doesn't work without this. for some reason mongoose stuff need a "then" 
-                });
-                console.log('Dead room deleted');
+
+function sendWarningToAdmin(currentTotal,totalCapacity){
+    try{
+        let transporter = nodemailer.createTransport({
+            service: 'gmail',
+            secure: false,
+            port: 25,
+            auth: {
+                user: sec.email,
+                pass: sec.password
+            },
+            tls: {
+                rejectUnauthorized: false
             }
         });
-    }).catch((e)=>{
+
+        let HelperOptions = {
+            from: sec.email,
+            to: sec.adminEmail,
+            subject: 'Warning: Rooms at near capacity for footio',
+            text: `Total of ${currentTotal} users online, out of a capacity of ${totalCapacity}`
+        };
+
+        transporter.sendMail(HelperOptions, (error, info) => {
+            if (error) {
+                return console.log(error);
+            }
+            console.log("The message was sent!");
+            console.log(info);
+        });
+    }catch(e){
         console.log(e);
-    })
+    }
+}
+
+function removeDeadRooms(){
+    let currentTime = new Date().getTime();
+    for (let i = 0; i < rooms.length; i++) {
+        if(currentTime - rooms[i].lastUpdate>11*1000){
+            rooms.splice(i, 1);
+            console.log('Dead room deleted');
+            break;
+        }        
+    }
+}
+
+function checkTotalOnlineUsers(){
+    let currentTotal = 0;
+    for (let i = 0; i < rooms.length; i++) {
+        currentTotal += rooms[i].playerAmount;
+    }
+    if(currentTotal >= 0.9 * rooms.length * 10){
+        // console.log('WARNING! OVER 90% CAPACITY');
+        // sendWarningToAdmin(currentTotal,rooms.length * 10); // make a simple react native app that runs in the background and gets the alert
+    }else{
+        console.log(`Total of ${currentTotal} users online, out of a capacity of ${rooms.length*10}`);
+    }
 }
 
 
-if (currentIP != 'www.mund.io') {
+if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
     app.listen(port, () => {
-        console.log(`Started up at port ${port}`);
+        console.log(`Started up at port ${process.env.PORT}`);
     });
 } else {
-    var options = {
-        key: fs.readFileSync("/etc/letsencrypt/live/www.mund.io/privkey.pem"),
-        cert: fs.readFileSync("/etc/letsencrypt/live/www.mund.io/fullchain.pem")
+    let options = {
+        key: fs.readFileSync("/etc/letsencrypt/live/footio.com.de/privkey.pem"),
+        cert: fs.readFileSync("/etc/letsencrypt/live/footio.com.de/fullchain.pem")
     };
     https
         .createServer(options, app)
         .listen(443);
+    console.log('HTTPS!');
 }
 
-// var http = require('http'); http.createServer(function (req, res) {
+// let http = require('http'); http.createServer(function (req, res) {
 // res.writeHead(301, {         "Location": "https://" + req.headers['host'] +
 // req.url     });     res.end(); }).listen(80);
 
@@ -996,6 +1106,7 @@ module.exports = {
 };
 
 setInterval(removeDeadRooms,10*1000);
+setInterval(checkTotalOnlineUsers,10*1000);
 
 // these things either should be in the front end, or just don't work with
 // postman localStorage.setItem('token', token); //this isn't from the course,

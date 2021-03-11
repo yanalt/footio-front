@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 
-var Room = mongoose.model('Room', { //.model makes a new data type like in MySQL.
+var Room = mongoose.model('Room', { 
   ip: {
     type: String,
     required: true,
