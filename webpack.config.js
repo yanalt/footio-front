@@ -3,9 +3,8 @@ var path = require('path');
 
 module.exports = {
   entry: [
-    'script!jquery/dist/jquery.min.js',
-    './app/app.jsx',
-    'whatwg-fetch'
+    '!jquery/dist/jquery.min.js',
+    './app/app.jsx'
   ],
   externals: {
     jquery: 'jQuery'
@@ -24,8 +23,7 @@ module.exports = {
     root: __dirname,
     modulesDirectories: [
       'node_modules',
-      './app/components',
-      './app/api'
+      './app/components'
     ],
     extensions: ['', '.js', '.jsx']
   },

@@ -1,13 +1,10 @@
 var React = require('react');
-var uuid = require('node-uuid');
 const axios = require('axios');
-import currentIP from 'ip';
 import '../styles/styles.css';
 
 // var SkinList = require('SkinList');
 // var AddSkin = require('AddSkin');
 // var SkinSearch = require('SkinSearch');
-var SkinAPI = require('SkinAPI');
 let protocoL = 'http://';
 
 // let server.js read the capacity json, and send here via axios
@@ -70,9 +67,9 @@ var Rooms = React.createClass({
         };
         var renderRooms = () => {
             return this.state.rooms.map((room) => {
-                let url = protocoL+room.ip+':'+room.port;
+                let url = room.ip+':'+room.port;
                 if(room.ip=='localhost')
-                    url = protocoL+'10.0.0.11'+':'+room.port;
+                    url = '10.0.0.11'+':'+room.port;
                 return (
                     <div>
                         <a href={url + '?asd=qwe'+'&name='+ this.state.name+'&conf='+this.state.skinToken}>
@@ -111,8 +108,8 @@ var Rooms = React.createClass({
 
                                 <div>
                                     <h1>ROOM LIST</h1>
-                                    <h3>Use mouse or 🕹 to navigate, left click or 🏃 to sprint, and right click or ⚽ to kick</h3>
-                                    <h3>Holding right click or ⚽ increases the strength of the shot</h3>
+                                    <h3 style={{color:'red'}}>Use mouse or 🕹 to navigate, left click or 🏃 to sprint, and right click or ⚽ to kick</h3>
+                                    <h3 style={{color:'red'}}>Holding right click or ⚽ increases the strength of the shot</h3>
                                     {
                                     redirect()
                                     } 
@@ -132,9 +129,11 @@ var Rooms = React.createClass({
                                 renderRooms()
                                 } 
                             </td>
+                        </tr>
+                        <tr>
                             <td>
-                                <a href="https://play.google.com/store/apps/details?id=com.timsa7.mundmobile" ><img src="/img/androidBig.png" height="10%" width="10%" /></a>
-                                <a href="https://apps.apple.com/us/app/footio/id1556001662"><img src="/img/iosBig.png" height="10%" width="10%" /></a>
+                                <a href="https://play.google.com/store/apps/details?id=com.timsa7.mundmobile" ><img src="/img/androidBig.png" height="18%" /></a>
+                                <a href="https://apps.apple.com/us/app/footio/id1556001662"><img src="/img/iosBig.png" height="18%"  /></a>
                             </td>  
                         </tr>
                     </table>

@@ -187,10 +187,13 @@ app.post('/updateRooms',(req,res)=>{
         }        
     }
     if(!found){
+        let protocol = 'http://';
+        if(process.env.NODE_ENV != 'development' && process.env.NODE_ENV != 'test')
+            protocol = 'https://';
         rooms.push({
             playerAmount:req.body.playerAmount,
             playerMax:req.body.playerMax,
-            ip:req.body.ip,
+            ip:protocol+req.body.ip,
             port:req.body.port,
             location:req.body.location,
             difficulty:req.body.difficulty,
