@@ -7,6 +7,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 let {mongoose} = require('./db/mongoose'); //don't delete this ever again, unless you want to build mongodb connection from scratch.
+mongoose.set('useFindAndModify', false);
 // let uidDictionary = ['a','b','c','d','e','f','g','h','i','j','k','m','n','p','q','r','s','t','u','v','w','x','y','z','2','3','4','5','6','7','8','9'];
 // const uid = new ShortUniqueId({ dictionary: uidDictionary , length: 6 });
 // const upass = new ShortUniqueId({ dictionary: uidDictionary , length: 8 });
@@ -15,11 +16,14 @@ let {Skin} = require('./models/skin'); //now you can use mongoose functions like
 let {User} = require('./models/user');
 let {Ball} = require('./models/ball');
 let {Country} = require('./models/country');
+let {Scorer} = require('./models/scorer');
 // let {Room} = require('./models/room');
 let {authenticate} = require('./middleware/authenticate');
 let sec = require('./../sec.json');
 
 let rooms = [];
+let scorers = [];
+let assisters = [];
 let alphabet = 'abcdefghijklmnopqrstuvwxyz';
 
 let app = express();
@@ -155,6 +159,8 @@ function updateCountryStats(code) {
                     $inc: {
                         amount: 1
                     }
+                }).then((res)=>{
+                    console.log('country stat updated successfully');
                 });
             }
         })
@@ -163,17 +169,95 @@ function updateCountryStats(code) {
         });
 }
 
-// app.get('/1', function(request, response){  // TODO: make a static landing page that links to android and ios apps.
-//     response.sendFile('/root/footio-front/public/1.png');
-// });
+function updateTopScorers(name, points) {
+    console.log('updateTopScorers ' + name + ' ' + points);
+    Scorer
+        .find({name})
+        .then((result) => {
+            console.log(result);
+            if (result.length == 0) {
+                let scorer = new Scorer({name});
+                if(points==15)
+                    scorer.goals=1;
+                else
+                    scorer.assists=1;
+    
+                scorer.save();
+                console.log('new scorer added successfully');
+            } else {
+                let increment = {}
+                if(points==15)
+                    increment.goals = 1;
+                else
+                    increment.assists = 1;
+                Scorer.findOneAndUpdate({
+                    name
+                },{
+                    $inc: increment
+                }).then((res)=>{
+                    console.log('scorer stat updated successfully');
+                });
+            }
+        })
+        .catch((e) => {
+            console.log(e);
+        });
+}
+
+function refreshScorersAndAssistersFromDB(){
+    Scorer
+        .find({}, {name:1,goals:1,_id:0}).sort({goals:-1}).limit(10)
+        .then((result)=>{
+            scorers = result;
+            // console.log(result);
+        })
+        .catch((e) => {
+            console.log(e);
+        });
+    
+    Scorer
+        .find({}, {name:1,assists:1,_id:0}).sort({assists:-1}).limit(10)
+        .then((result)=>{
+            assisters = result;
+            // console.log(result);
+        })
+        .catch((e) => {
+            console.log(e);
+        });
+}
 
 
+
+app.get('/scorerStats',(req,res)=>{
+    res.send({scorers,assisters});
+});
 
 
 
 app.get('/roomStats',(req,res)=>{
     res.send({rooms});
 });
+
+app.get('/updateCountry',(req,res)=>{
+    try{
+        let country = requestCountry(req);
+        if (!country) 
+            country = "unknown";
+        
+        console.log(country);
+
+        updateCountryStats(country);
+
+        res.status(200).send('success');
+    } catch(e) {
+        console.log('/updateCountry error');
+        console.log(e);
+        res.status(404).send('update country error');
+    }
+});
+
+
+
 
 app.post('/updateRooms',(req,res)=>{
     let currentTime = new Date().getTime();
@@ -208,19 +292,19 @@ app.post('/updateRooms',(req,res)=>{
 });
 
 app.get('/rooms', (req, res) => {
-    let country = requestCountry(req);
-    if (country == null || country == undefined) 
-        country = "unknown";
-    updateCountryStats(country);
-    fs.readFile('../capacity.json', 'utf8', function readFileCallback(err, data) {
-        if (err) {
-            console.log(err);
-            res.status(404).send(err);
-        } else {
-            let obj = JSON.parse(data);
-            res.send(obj.ports);
-        }
-    });
+    // let country = requestCountry(req);
+    // if (country == null || country == undefined) 
+    //     country = "unknown";
+    // updateCountryStats(country);
+    // fs.readFile('../capacity.json', 'utf8', function readFileCallback(err, data) {
+    //     if (err) {
+    //         console.log(err);
+    //         res.status(404).send(err);
+    //     } else {
+    //         let obj = JSON.parse(data);
+    //         res.send(obj.ports);
+    //     }
+    // });
 });
 
 app.get('/skins', authenticate, (req, res) => {
@@ -414,8 +498,14 @@ app.post('/users/skintoken', (req, res) => { //we don't use authenticate since w
 
 app.post('/updatestats', (req, res) => {
     console.log("====================");
+    console.log("name: " + req.body.name);
     console.log("id: " + req.body.serverId);
     console.log("points: " + req.body.points);
+
+    if(req.body.name){
+        console.log(req.body.name);
+        updateTopScorers(req.body.name, req.body.points);
+    }
 
     if (req.body.serverId) {
         User.findOneAndUpdate({
@@ -1110,6 +1200,8 @@ module.exports = {
 
 setInterval(removeDeadRooms,10*1000);
 setInterval(checkTotalOnlineUsers,10*1000);
+refreshScorersAndAssistersFromDB();
+setInterval(refreshScorersAndAssistersFromDB,60*1000);
 
 // these things either should be in the front end, or just don't work with
 // postman localStorage.setItem('token', token); //this isn't from the course,

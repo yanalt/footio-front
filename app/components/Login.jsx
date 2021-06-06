@@ -82,44 +82,47 @@ export var Login = React.createClass({
         }else{
             isDesktop = true;
         }
-        if(!isDesktop){
+        if(isDesktop){
+            
             return (
                 <div>
                     <table>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style} className="page-title">FOOTIO</h1>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style}>Android: (click/scan)</h1>
-                                <a href="https://play.google.com/store/apps/details?id=com.timsa7.mundmobile" ><img src="/img/androidBig.png" height={imgHeight}/></a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style}>iOS: (click/scan)</h1>
-                                <a href="https://apps.apple.com/us/app/footio/id1556001662"><img src="/img/iosBig.png" height={imgHeight}/></a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style}>Web:</h1>
-                                <button style={buttonStyle} onTouchEnd={this.handleGuest} onClick={this.handleGuest}>Play as a guest! ⚽</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style}>Web: (login ID and code from mobile app)</h1>
-                                <form onSubmit={this.handleSubmit}>
-                                    <input type="text" style={inputStyle} ref="loginEmail" placeholder="Your ID"/>
-                                    <input type="password" style={inputStyle} ref="loginPassword" placeholder="Your code"/>
-                                    <button onTouchEnd={this.handleSubmit} style={buttonStyle}>Login</button>
-                                    <div ref="errorTitle"></div>
-                                </form>
-                            </td>
-                        </tr>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style} className="page-title">FOOTIO</h1>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style}>Web:</h1>
+                                    <button style={buttonStyle} onTouchEnd={this.handleGuest} onClick={this.handleGuest}>Play as a guest! ⚽</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style}>Web: (login ID and code from mobile app)</h1>
+                                    <form onSubmit={this.handleSubmit}>
+                                        <input type="text" style={inputStyle} ref="loginEmail" placeholder="Your ID"/>
+                                        <input type="password" style={inputStyle} ref="loginPassword" placeholder="Your code"/>
+                                        <button onTouchEnd={this.handleSubmit} style={buttonStyle}>Login</button>
+                                        <div ref="errorTitle"></div>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style}>Android: (click/scan)</h1>
+                                    <a href="https://play.google.com/store/apps/details?id=com.timsa7.mundmobile" ><img src="/img/androidBig.png" height="10%" width="10%"/></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style}>iOS: (click/scan)</h1>
+                                    <a href="https://apps.apple.com/us/app/footio/id1556001662"><img src="/img/iosBig.png" height="10%" width="10%"/></a>
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                             
                         
@@ -139,83 +142,88 @@ export var Login = React.createClass({
             return(
                 <div>
                     <table>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style} className="page-title">FOOTIO</h1>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style}>iOS: (click/scan)</h1>
-                                <a href="https://apps.apple.com/us/app/footio/id1556001662"><img src="/img/iosBig.png" height="10%" width="10%"/></a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style}>Android: (click/scan)</h1>
-                                <a href="https://play.google.com/store/apps/details?id=com.timsa7.mundmobile" ><img src="/img/androidBig.png" height="10%" width="10%"/></a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style}>Web:</h1>
-                                <button style={buttonStyle} onTouchEnd={this.handleGuest} onClick={this.handleGuest}>Play as a guest! ⚽</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style}>Web: (login ID and code from mobile app)</h1>
-                                <form onSubmit={this.handleSubmit}>
-                                    <input type="text" style={inputStyle} ref="loginEmail" placeholder="Your ID"/>
-                                    <input type="password" style={inputStyle} ref="loginPassword" placeholder="Your code"/>
-                                    <button onTouchEnd={this.handleSubmit} style={buttonStyle}>Login</button>
-                                    <div ref="errorTitle"></div>
-                                </form>
-                            </td>
-                        </tr>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style} className="page-title">FOOTIO</h1>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style}>iOS: (click/scan)</h1>
+                                    <a href="https://apps.apple.com/us/app/footio/id1556001662"><img src="/img/iosBig.png" height="10%" width="10%"/></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style}>Android: (click/scan)</h1>
+                                    <a href="https://play.google.com/store/apps/details?id=com.timsa7.mundmobile" ><img src="/img/androidBig.png" height="10%" width="10%"/></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style}>Web:</h1>
+                                    <button style={buttonStyle} onTouchEnd={this.handleGuest} onClick={this.handleGuest}>Play as a guest! ⚽</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style}>Web: (login ID and code from mobile app)</h1>
+                                    <form onSubmit={this.handleSubmit}>
+                                        <input type="text" style={inputStyle} ref="loginEmail" placeholder="Your ID"/>
+                                        <input type="password" style={inputStyle} ref="loginPassword" placeholder="Your code"/>
+                                        <button onTouchEnd={this.handleSubmit} style={buttonStyle}>Login</button>
+                                        <div ref="errorTitle"></div>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                             
                         
                 </div>
             );
         }else{
+            
             return (
                 <div>
                     <table>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style} className="page-title">FOOTIO</h1>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style}>Web:</h1>
-                                <button style={buttonStyle} onTouchEnd={this.handleGuest} onClick={this.handleGuest}>Play as a guest! ⚽</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style}>Web: (login ID and code from mobile app)</h1>
-                                <form onSubmit={this.handleSubmit}>
-                                    <input type="text" style={inputStyle} ref="loginEmail" placeholder="Your ID"/>
-                                    <input type="password" style={inputStyle} ref="loginPassword" placeholder="Your code"/>
-                                    <button onTouchEnd={this.handleSubmit} style={buttonStyle}>Login</button>
-                                    <div ref="errorTitle"></div>
-                                </form>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style}>Android: (click/scan)</h1>
-                                <a href="https://play.google.com/store/apps/details?id=com.timsa7.mundmobile" ><img src="/img/androidBig.png" height="10%" width="10%"/></a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1 style={h1Style}>iOS: (click/scan)</h1>
-                                <a href="https://apps.apple.com/us/app/footio/id1556001662"><img src="/img/iosBig.png" height="10%" width="10%"/></a>
-                            </td>
-                        </tr>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style} className="page-title">FOOTIO</h1>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style}>Android: (click/scan)</h1>
+                                    <a href="https://play.google.com/store/apps/details?id=com.timsa7.mundmobile" ><img src="/img/androidBig.png" height={imgHeight}/></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style}>iOS: (click/scan)</h1>
+                                    <a href="https://apps.apple.com/us/app/footio/id1556001662"><img src="/img/iosBig.png" height={imgHeight}/></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style}>Web:</h1>
+                                    <button style={buttonStyle} onTouchEnd={this.handleGuest} onClick={this.handleGuest}>Play as a guest! ⚽</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style={h1Style}>Web: (login ID and code from mobile app)</h1>
+                                    <form onSubmit={this.handleSubmit}>
+                                        <input type="text" style={inputStyle} ref="loginEmail" placeholder="Your ID"/>
+                                        <input type="password" style={inputStyle} ref="loginPassword" placeholder="Your code"/>
+                                        <button onTouchEnd={this.handleSubmit} style={buttonStyle}>Login</button>
+                                        <div ref="errorTitle"></div>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                             
                         

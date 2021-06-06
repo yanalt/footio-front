@@ -7,23 +7,28 @@ import '../styles/styles.css';
 // var SkinSearch = require('SkinSearch');
 let protocoL = 'http://';
 
+let address = '';
+
 // let server.js read the capacity json, and send here via axios
 
 // CHANGE THIS ENTIRE FILE TO INCLUDE ONLY A "LOADING" SIGN, AND AN ALGORITHM TO ASSIGN USER TO A GAME
 
 var Rooms = React.createClass({
     getInitialState: function () {
-        return {rooms: [], searchParams: {}, name: 'anon', skinToken: ''};
+        return {rooms: [], scorers: [], assisters: [], searchParams: {}, name: 'anon', skinToken: ''};
     },
     componentDidMount: function() {
-        let address = '';
 
+        this.handleCountry();
         if ((window.location.href).search('localhost')!=-1||(window.location.href).search('10.0.0')!=-1) 
             address = 'http://10.0.0.11:3000';
         else{
                 address = 'https://footio.com.de';
                 protocoL = 'https://';
-            }
+        }
+
+
+        this.fetchScorers(address);
 
         let xauth = localStorage.getItem('x-auth');
         if (xauth){
@@ -57,6 +62,35 @@ var Rooms = React.createClass({
             console.log(e);
         });
     },
+    fetchScorers: function(address) {
+        axios({
+            method: 'get',
+            url: address + '/scorerStats'
+        }).then((response)=>{
+            console.log(response);
+            this.setState({scorers:response.data.scorers,assisters:response.data.assisters});
+        }).catch((e) => {
+            console.log(e);
+        });
+    },
+
+    handleCountry: function() {
+        let isOldVisitor = localStorage.getItem('oldVisitor');
+        console.log(isOldVisitor);
+        if(!isOldVisitor) {
+            console.log(isOldVisitor);
+            axios({
+                method: 'get',
+                url: address + '/updateCountry'
+            }).then(response => {
+                localStorage.setItem('oldVisitor', true);
+                console.log('update country stats');
+            }).catch((e) => {
+                console.log('update country failed');
+                console.log(e);
+            });
+        }
+    },
     handleName: function() {
         this.setState({name:this.refs.nameInput.value});
         console.log(this.refs.nameInput.value);
@@ -80,6 +114,36 @@ var Rooms = React.createClass({
             });
         };
 
+        let renderScorers = () => {
+            return this.state.scorers.map((scorer) => {
+                return (
+                    <tr>
+                        <td>
+                            { scorer.name }
+                        </td>
+                        <td>
+                            { scorer.goals }
+                        </td>
+                    </tr>
+                );
+            });
+        }
+
+        let renderAssisters = () => {
+            return this.state.assisters.map((assister) => {
+                return (
+                    <tr>
+                        <td>
+                            { assister.name }
+                        </td>
+                        <td>
+                            { assister.assists }
+                        </td>
+                    </tr>
+                );
+            });
+        }
+
         // if (!localStorage.getItem('x-auth')) {
         //     return (
         //         <div>
@@ -102,40 +166,80 @@ var Rooms = React.createClass({
 
             return (
                 <div>
-                    <table width="100%">
-                        <tr>
-                            <td style={{alignItems:'center'}}>
+                    <table width="100%" style={{}}>
+                        <tbody>
+                            <tr>
+                                <td style={{alignItems:'center'}}>
 
-                                <div>
-                                    <h1>ROOM LIST</h1>
-                                    <h3 style={{color:'red'}}>Use mouse or 🕹 to navigate, left click or 🏃 to sprint, and right click or ⚽ to kick</h3>
-                                    <h3 style={{color:'red'}}>Holding right click or ⚽ increases the strength of the shot</h3>
+                                    <div>
+                                        <h1>ROOM LIST</h1>
+                                        <h3 style={{color:'red'}}>Use mouse or 🕹 to navigate, left click or 🏃 to sprint, and right click or ⚽ to kick</h3>
+                                        <h3 style={{color:'red'}}>Holding right click or ⚽ increases the strength of the shot</h3>
+                                        {
+                                        redirect()
+                                        } 
+                                    </div>
+
+                                    <div>
+                                        <input ref="nameInput" onChange={this.handleName} type="text" placeholder="insert nickname" />
+                                        (only alphabetic with no spaces, please be nice :) )
+                                    </div>
+
+                                </td>
+                                <td colSpan={2}>
+                                    <h1>TOP SCORERS</h1>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1>Room list:</h1>
                                     {
-                                    redirect()
+                                    renderRooms()
                                     } 
-                                </div>
-
-                                <div>
-                                    <input ref="nameInput" onChange={this.handleName} type="text" placeholder="insert nickname" />
-                                    (only alphabetic with no spaces, please be nice :) )
-                                </div>
-
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h1>Room list:</h1>
-                                {
-                                renderRooms()
-                                } 
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <a href="https://play.google.com/store/apps/details?id=com.timsa7.mundmobile" ><img src="/img/androidBig.png" height="18%" /></a>
-                                <a href="https://apps.apple.com/us/app/footio/id1556001662"><img src="/img/iosBig.png" height="18%"  /></a>
-                            </td>  
-                        </tr>
+                                </td>
+                                <td style={{}} rowSpan={3}>
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    Nickname
+                                                </td>
+                                                <td>
+                                                    Goals
+                                                </td>
+                                            </tr>
+                                            {
+                                                renderScorers()
+                                            }
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td style={{}} rowSpan={3}>
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    Nickname
+                                                </td>
+                                                <td>
+                                                    Assists
+                                                </td>
+                                            </tr>
+                                            {
+                                                renderAssisters()
+                                            }
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>
+                                    <a href="https://play.google.com/store/apps/details?id=com.timsa7.mundmobile" ><img src="/img/androidBig.png" height="300" /></a>
+                                    <a href="https://apps.apple.com/us/app/footio/id1556001662"><img src="/img/iosBig.png" height="300"  /></a>
+                                </td>  
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             )
