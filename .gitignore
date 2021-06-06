@@ -8,3 +8,5 @@ public/bundle.js
 ip.json
 server/config/firebaseConfig.js
 privateKeySomething.json
+config.json
+
