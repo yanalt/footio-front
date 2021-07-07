@@ -34,8 +34,9 @@ const port = process.env.PORT;
 const https = require("https"),
     helmet = require("helmet");
 
+let parentOfDirName = __dirname.split('/server')[0];
 app.use(helmet());
-app.use(express.static('public', {dotfiles: 'allow'}));
+app.use(express.static(parentOfDirName + '/public', {dotfiles: 'allow'}));
 
 app.use(bodyParser.json()); //we tell app to use the json part of body-parser
 //app.use(bodyParser.urlencoded({extended:true})); //use this for simple pure HTML forms.
@@ -48,6 +49,8 @@ app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Headers", 'Origin,x-auth,X-Requested-With,Content-Type,Accept,content-type');
     next();
 });
+
+// app.use(express.static(url + '/yanal-site/public'));
 
 // admin.initializeApp({
 //     credential: admin.credential.applicationDefault(),
@@ -257,6 +260,14 @@ app.get('/updateCountry',(req,res)=>{
 });
 
 
+app.get('/*', function(req, res) {
+    res.sendFile(parentOfDirName + '/public/index.html', function(err) {
+      if (err) {
+          console.log(err);
+        res.status(500).send(err)
+      }
+    })
+});
 
 
 app.post('/updateRooms',(req,res)=>{
@@ -1181,12 +1192,12 @@ if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
     });
 } else {
     let options = {
-        key: fs.readFileSync("/etc/letsencrypt/live/footio.com.de/privkey.pem"),
-        cert: fs.readFileSync("/etc/letsencrypt/live/footio.com.de/fullchain.pem")
+        key: fs.readFileSync(process.env.PRIVKEY_URI),
+        cert: fs.readFileSync(process.env.FULLCHAIN_URI)
     };
     https
         .createServer(options, app)
-        .listen(443);
+        .listen(process.env.PORT);
     console.log('HTTPS!');
 }
 
