@@ -260,7 +260,7 @@ app.get('/updateCountry',(req,res)=>{
 });
 
 
-app.get('/*', function(req, res) {
+app.get('/', function(req, res) {
     res.sendFile(parentOfDirName + '/public/index.html', function(err) {
       if (err) {
           console.log(err);
@@ -1201,10 +1201,6 @@ if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
     console.log('HTTPS!');
 }
 
-// let http = require('http'); http.createServer(function (req, res) {
-// res.writeHead(301, {         "Location": "https://" + req.headers['host'] +
-// req.url     });     res.end(); }).listen(80);
-
 module.exports = {
     app
 };
@@ -1214,11 +1210,3 @@ setInterval(checkTotalOnlineUsers,10*1000);
 refreshScorersAndAssistersFromDB();
 setInterval(refreshScorersAndAssistersFromDB,60*1000);
 
-// these things either should be in the front end, or just don't work with
-// postman localStorage.setItem('token', token); //this isn't from the course,
-// it saves the token on the user's browser so he can have the login session
-// available even when browsing. let token = localStorage.getItem('token');
-// localStorage.removeItem('token'); //this isn't from the course, it deletes
-// the token on the user's browser so can no longer have the login session when
-// browsing. about x-auth: if you type "x-" you can make a custom header other
-// than the default ones (delete, update, etc.)
